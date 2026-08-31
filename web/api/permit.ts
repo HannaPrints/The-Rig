@@ -16,14 +16,30 @@ const CHAIN_ID = Number(process.env.CHAIN_ID ?? 4663);
 const MAX_PER_TX = 50; // the Shop's gas bound — not a rate limit
 const PERMIT_TTL_SECONDS = 300;
 
+// Trim stray whitespace/quotes/newlines from a pasted Vercel env value and
+// ensure the 0x prefix — the classic dashboard paste bugs.
+function normalizePk(raw: string | undefined): `0x${string}` | null {
+  if (!raw) return null;
+  let v = raw.trim().replace(/^['"]|['"]$/g, "");
+  if (!v.startsWith("0x")) v = "0x" + v;
+  return /^0x[0-9a-fA-F]{64}$/.test(v) ? (v as `0x${string}`) : null;
+}
+
 export default async function handler(req: any, res: any) {
+  const pk = normalizePk(process.env.SIGNER_PK);
+
+  // GET = health/verification: exposes the signer ADDRESS (never the key), so the
+  // deployed env can be checked against the on-chain Shop signer without minting.
+  if (req.method === "GET") {
+    if (!pk) return res.status(500).json({ ok: false, error: "SIGNER_PK not set or malformed" });
+    return res.status(200).json({ ok: true, signer: privateKeyToAccount(pk).address, shop: SHOP });
+  }
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (!pk) return res.status(500).json({ error: "signer not configured (SIGNER_PK missing/malformed)" });
 
-  const pk = process.env.SIGNER_PK as `0x${string}` | undefined;
-  if (!pk) return res.status(500).json({ error: "signer not configured" });
-
-  const to = req.body?.to as string | undefined;
-  const qty = Number(req.body?.qty ?? 1);
+  const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body ?? {});
+  const to = body?.to as string | undefined;
+  const qty = Number(body?.qty ?? 1);
   if (!to || !isAddress(to)) return res.status(400).json({ error: "invalid address" });
   if (!Number.isInteger(qty) || qty < 1 || qty > MAX_PER_TX) {
     return res.status(400).json({ error: `qty must be 1..${MAX_PER_TX}` });
