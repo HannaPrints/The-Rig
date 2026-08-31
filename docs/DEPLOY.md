@@ -11,8 +11,8 @@ wallet** — nobody can front-run or squat these. Predicted by simulating the re
 
 | What | Address | How it's fixed |
 |---|---|---|
-| **$GPU token** | `0x3Da22F970a0a048d3830fDE22b94017B83a3802E` | CREATE2 (factory) |
-| **Bonding curve** | `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` | CREATE2 (factory) |
+| **$GPU token** | `0x3Da22F970a0a048d3830fDE22b94017B83a3802E` | **LIVE** — landed exactly as predicted, block 51064610, tx `0x986fd73b…0641` |
+| **Bonding curve** | `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` | **LIVE** — fee recipient verified = FeeRouter pin |
 | PonsCurveAdapter | `0x98739E2bF978A856c681b98f0A8415E091eA5CF2` | our nonce 1 |
 | BuybackVault | `0xcA1654Fa5815Db81674655830d4356D0A212c221` | our nonce 2 |
 | **PonsFeeRouter** | `0x1C92372E0f2D0eD1CF716632734f041C57f60a8F` | our nonce 3 — **pinned as creatorFeeRecipient at launch, before it exists** |
@@ -164,9 +164,15 @@ Two findings the dry run surfaced (both fixed):
    fork inherits that code and "treasury" auto-forwarded its ETH to a drainer until
    we switched to fresh random wallets. Same lesson applies to real ops keys.
 
-## Open items before mainnet
+## Open items
 
-- Chainlink ETH/USD feed address on Robinhood Chain (`ETH_USD_FEED`) — confirm from
-  Chainlink's official docs, not a search result.
-- Final token metadata (changes the CA — see above).
-- Audit. Do not skip the audit.
+- ~~$GPU launch~~ **DONE 2026-08-31** — trading live on the Pons curve; fees accrue in
+  the escrow for the FeeRouter address and are claimable once nonces 1–11 deploy.
+- ~~Chainlink ETH/USD feed~~ **FOUND & VERIFIED**: `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9`
+  ("ETH / USD", 8 decimals, 24h heartbeat + deviation updates — matches the Shop's
+  24h staleness window).
+- **TREASURY address (blocking the suite deploy)** — must be a team-controlled
+  multisig; it is immutable in Shop, PonsFeeRouter and RoyaltyRouter.
+- Suite deploy = the deployer wallet's next 11 transactions, exactly. Nothing else
+  from that wallet.
+- Audit. Still unaudited; the mint should not open before it.

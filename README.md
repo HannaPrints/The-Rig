@@ -84,6 +84,10 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 
 ## Status
 
+**🟢 $GPU IS LIVE** — launched 2026-08-31 on the exact predicted address, tx [`0x986fd73b…0641`](https://robinhoodchain.blockscout.com/tx/0x986fd73b5043c01b708b6cf7ca10cc7227bf041b9389b1c0d405cccac6560641):
+**CA `0x3Da22F970a0a048d3830fDE22b94017B83a3802E`** · curve `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` · 4% trade fee · trading open on Pons.
+
+
 - [x] Protocol deep dive & economic model — [docs/DEEPDIVE.md](docs/DEEPDIVE.md)
 - [x] Core contracts + 39 passing tests
 - [x] Pons bonding-curve adapter + Uniswap v3 adapter (v4 adapter lands at graduation)
@@ -96,7 +100,6 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 - [ ] Freeze token metadata → final CA
 - [ ] Audit
 - [ ] Card art
-- [ ] $GPU launch on Pons
 - [ ] Mint
 
 ## Not financial advice
