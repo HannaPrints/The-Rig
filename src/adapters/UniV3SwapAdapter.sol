@@ -39,7 +39,9 @@ contract UniV3SwapAdapter is ISwapAdapter {
     }
 
     function swapExactETHForGPU(uint256 minOut, address to) external payable returns (uint256 out) {
-        out = router.exactInputSingle{value: msg.value}(
+        out = router.exactInputSingle{
+            value: msg.value
+        }(
             IV3SwapRouter.ExactInputSingleParams({
                 tokenIn: weth,
                 tokenOut: gpu,
