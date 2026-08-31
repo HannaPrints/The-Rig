@@ -37,32 +37,45 @@ import {
 /// Env: GPU_TOKEN, CURVE, FEE_ESCROW, ETH_USD_FEED, KEEPER, SIGNER, TREASURY,
 ///      EXPECTED_FEE_ROUTER (optional but strongly recommended).
 contract Deploy is Script {
+    struct Cfg {
+        IERC20 gpu;
+        IPonsBondingCurve curve;
+        IPonsFeeEscrow escrow;
+        IAggregatorV3 feed;
+        address keeper;
+        address signer;
+        address payable treasury;
+        address expectedFeeRouter;
+    }
+
+    function _cfg() internal view returns (Cfg memory c) {
+        c.gpu = IERC20(vm.envAddress("GPU_TOKEN"));
+        c.curve = IPonsBondingCurve(vm.envAddress("CURVE"));
+        c.escrow = IPonsFeeEscrow(vm.envAddress("FEE_ESCROW"));
+        c.feed = IAggregatorV3(vm.envAddress("ETH_USD_FEED"));
+        c.keeper = vm.envAddress("KEEPER");
+        c.signer = vm.envAddress("SIGNER");
+        c.treasury = payable(vm.envAddress("TREASURY"));
+        c.expectedFeeRouter = vm.envOr("EXPECTED_FEE_ROUTER", address(0));
+    }
+
     function run() external {
-        IERC20 gpuToken = IERC20(vm.envAddress("GPU_TOKEN"));
-        IPonsBondingCurve curve = IPonsBondingCurve(vm.envAddress("CURVE"));
-        IPonsFeeEscrow escrow = IPonsFeeEscrow(vm.envAddress("FEE_ESCROW"));
-        IAggregatorV3 feed = IAggregatorV3(vm.envAddress("ETH_USD_FEED"));
-        address keeper = vm.envAddress("KEEPER");
-        address signer = vm.envAddress("SIGNER");
-        address payable treasury = payable(vm.envAddress("TREASURY"));
-        address expectedFeeRouter = vm.envOr("EXPECTED_FEE_ROUTER", address(0));
-
+        Cfg memory c = _cfg();
         vm.startBroadcast();
-        address owner = msg.sender;
 
-        PonsCurveAdapter adapter = new PonsCurveAdapter(curve); // nonce 1
-        BuybackVault vault = new BuybackVault(gpuToken, keeper, ISwapAdapter(address(adapter))); // nonce 2
-        PonsFeeRouter feeRouter = new PonsFeeRouter(escrow, gpuToken, payable(address(vault)), treasury); // nonce 3
-        if (expectedFeeRouter != address(0)) {
-            require(address(feeRouter) == expectedFeeRouter, "fee router address drifted from launch pin");
+        PonsCurveAdapter adapter = new PonsCurveAdapter(c.curve); // nonce 1
+        BuybackVault vault = new BuybackVault(c.gpu, c.keeper, ISwapAdapter(address(adapter))); // nonce 2
+        PonsFeeRouter feeRouter = new PonsFeeRouter(c.escrow, c.gpu, payable(address(vault)), c.treasury); // nonce 3
+        if (c.expectedFeeRouter != address(0)) {
+            require(address(feeRouter) == c.expectedFeeRouter, "fee router address drifted from launch pin");
         }
-        RigCard card = new RigCard(owner); // nonce 4
-        Shop shop = new Shop(card, gpuToken, feed, payable(address(vault)), treasury, signer, owner); // nonce 5
-        Rig rig = new Rig(gpuToken, card, ISlotProvider(address(shop)), address(vault)); // nonce 6
+        RigCard card = new RigCard(msg.sender); // nonce 4
+        Shop shop = new Shop(card, c.gpu, c.feed, payable(address(vault)), c.treasury, c.signer, msg.sender); // nonce 5
+        Rig rig = new Rig(c.gpu, card, ISlotProvider(address(shop)), address(vault)); // nonce 6
         vault.setRig(rig); // nonce 7
-        Workshop workshop = new Workshop(card, gpuToken, owner); // nonce 8
+        Workshop workshop = new Workshop(card, c.gpu, msg.sender); // nonce 8
         card.setModules(address(shop), address(workshop)); // nonce 9
-        RoyaltyRouter royalties = new RoyaltyRouter(payable(address(vault)), treasury); // nonce 10
+        RoyaltyRouter royalties = new RoyaltyRouter(payable(address(vault)), c.treasury); // nonce 10
         card.setDefaultRoyalty(address(royalties), 500); // nonce 11
 
         vm.stopBroadcast();
