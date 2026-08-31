@@ -1,50 +1,148 @@
+import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits } from "viem";
-import { addresses, deployed } from "../config";
-import { rigAbi } from "../abi";
+import { addresses, deployed, TIERS } from "../config";
+import { rigAbi, cardAbi, rigStakeAbi, shopRackAbi } from "../abi";
+import { useCards, type CardInfo } from "../useCards";
+
+function CardChip({ card, selected, onToggle }: { card: CardInfo; selected: boolean; onToggle: () => void }) {
+  const color = TIERS[card.tier - 1]?.color ?? "#9fb4a6";
+  return (
+    <button
+      onClick={onToggle}
+      className={`flex items-center justify-between border px-3 py-2 text-left transition-colors ${
+        selected ? "border-accent bg-accent/10" : "border-line hover:border-accent-dim"
+      }`}
+    >
+      <span className="min-w-0">
+        <span className="num text-[11px] text-muted">#{card.serial}</span>
+        <span className="ml-2 truncate text-[12px]" style={{ color }}>
+          {TIERS[card.tier - 1]?.name}
+        </span>
+        {card.level > 0 && <span className="num ml-1 text-[10px] text-amber">+{card.level * 20}%</span>}
+      </span>
+      <span className="num shrink-0 text-[12px] text-ink">{card.mh} MH/s</span>
+    </button>
+  );
+}
 
 export function MyRig() {
   const { address, isConnected } = useAccount();
-  const { writeContractAsync, data: txHash, isPending } = useWriteContract();
-  const { isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
+  const { writeContractAsync, isPending } = useWriteContract();
+  const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
+  const { isLoading: confirming } = useWaitForTransactionReceipt({ hash: pendingHash });
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [status, setStatus] = useState("");
 
-  const enabled = deployed && !!address;
+  const { cards, refetch: refetchCards } = useCards(address);
+  const walletCards = cards.filter((c) => !c.staked);
+  const stakedCards = cards.filter((c) => c.staked);
+
+  const q = { query: { enabled: deployed && !!address, refetchInterval: 8_000 } };
+  const { data: earned, refetch: refetchEarned } = useReadContract({
+    address: addresses.rig, abi: rigAbi, functionName: "earned", args: address ? [address] : undefined, ...q,
+  });
   const { data: weight } = useReadContract({
-    address: addresses.rig,
-    abi: rigAbi,
-    functionName: "weightOf",
-    args: address ? [address] : undefined,
-    query: { enabled, refetchInterval: 5_000 },
+    address: addresses.rig, abi: rigAbi, functionName: "weightOf", args: address ? [address] : undefined, ...q,
   });
-  const { data: earned, refetch } = useReadContract({
-    address: addresses.rig,
-    abi: rigAbi,
-    functionName: "earned",
-    args: address ? [address] : undefined,
-    query: { enabled, refetchInterval: 5_000 },
+  const { data: slots } = useReadContract({
+    address: addresses.shop, abi: shopRackAbi, functionName: "slotsOf", args: address ? [address] : undefined, ...q,
   });
+  const { data: racks } = useReadContract({
+    address: addresses.shop, abi: shopRackAbi, functionName: "racksOf", args: address ? [address] : undefined, ...q,
+  });
+  const { data: approved, refetch: refetchApproval } = useReadContract({
+    address: addresses.card, abi: cardAbi, functionName: "isApprovedForAll",
+    args: address && addresses.rig ? [address, addresses.rig] : undefined, ...q,
+  });
+  const { data: nextRackPrice } = useReadContract({
+    address: addresses.shop, abi: shopRackAbi, functionName: "rackPriceWei",
+    args: [(racks ?? 0n) + 1n], query: { enabled: deployed && (racks ?? 0n) < 12n },
+  });
+
+  const busy = isPending || confirming;
+  const slotsTotal = Number(slots ?? 4n);
+  const slotsFree = slotsTotal - stakedCards.length;
+
+  async function run(fn: () => Promise<`0x${string}`>, msg: string) {
+    try {
+      setStatus(msg);
+      const hash = await fn();
+      setPendingHash(hash);
+      setStatus(`${msg} — confirming…`);
+      await new Promise((r) => setTimeout(r, 3500));
+      await Promise.all([refetchCards(), refetchEarned(), refetchApproval()]);
+      setSelected(new Set());
+      setStatus("");
+      setPendingHash(undefined);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message.split("\n")[0] : "failed");
+    }
+  }
+
+  const toggle = (s: number) =>
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.has(s) ? n.delete(s) : n.add(s);
+      return n;
+    });
+
+  const selectedWallet = walletCards.filter((c) => selected.has(c.serial));
+  const selectedStaked = stakedCards.filter((c) => selected.has(c.serial));
+
+  async function stakeSelected() {
+    if (!addresses.rig) return;
+    if (!approved) {
+      await run(
+        () => writeContractAsync({ address: addresses.card!, abi: cardAbi, functionName: "setApprovalForAll", args: [addresses.rig!, true] }),
+        "approving rig…",
+      );
+      return; // approval done; user taps stake again
+    }
+    const ids = selectedWallet.map((c) => BigInt(c.serial));
+    if (ids.length === 0) return;
+    if (ids.length > slotsFree) return setStatus(`only ${slotsFree} slots free — buy a rack or select fewer`);
+    await run(
+      () => writeContractAsync({ address: addresses.rig!, abi: rigStakeAbi, functionName: "stake", args: [ids] }),
+      `plugging in ${ids.length} card${ids.length > 1 ? "s" : ""}…`,
+    );
+  }
+
+  async function unstakeSelected() {
+    const ids = selectedStaked.map((c) => BigInt(c.serial));
+    if (ids.length === 0 || !addresses.rig) return;
+    await run(
+      () => writeContractAsync({ address: addresses.rig!, abi: rigStakeAbi, functionName: "unstake", args: [ids] }),
+      `unplugging ${ids.length}…`,
+    );
+  }
 
   async function claim() {
     if (!addresses.rig) return;
-    await writeContractAsync({ address: addresses.rig, abi: rigAbi, functionName: "claim" });
-    await refetch();
+    await run(() => writeContractAsync({ address: addresses.rig!, abi: rigAbi, functionName: "claim" }), "claiming…");
+  }
+
+  async function buyRack() {
+    if (!addresses.shop || nextRackPrice === undefined) return;
+    await run(
+      () => writeContractAsync({ address: addresses.shop!, abi: shopRackAbi, functionName: "buyRack", value: nextRackPrice }),
+      "buying rack…",
+    );
   }
 
   return (
     <div className="panel p-6">
-      <div className="label mb-6 text-ink">my rig</div>
+      <div className="mb-6 flex items-baseline justify-between">
+        <div className="label text-ink">my rig</div>
+        <div className="num text-[11px] text-muted">
+          {stakedCards.length}/{slotsTotal} slots
+        </div>
+      </div>
 
-      {!deployed ? (
-        <p className="text-[13px] leading-6 text-muted">
-          Your rig lives here: staked cards, live hashrate, and a claim button paying out a stream
-          that accrues <span className="text-ink">every second</span>. Earnings float with the
-          buyback pot — the rig never owes anyone a fixed return, which is exactly why it can never
-          go under.
-        </p>
-      ) : !isConnected ? (
+      {!isConnected ? (
         <p className="label">connect a wallet to see your rig</p>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="num text-2xl text-ink">{(weight ?? 0n).toLocaleString()}</div>
@@ -57,13 +155,67 @@ export function MyRig() {
               <div className="label mt-1.5">$gpu claimable</div>
             </div>
           </div>
-          <button
-            onClick={claim}
-            disabled={isPending || confirming || (earned ?? 0n) === 0n}
-            className="btn-primary w-full"
-          >
-            {isPending || confirming ? "…" : "CLAIM"}
+
+          <button onClick={claim} disabled={busy || (earned ?? 0n) === 0n} className="btn-primary w-full">
+            {busy ? "…" : "CLAIM $GPU"}
           </button>
+
+          {/* staked */}
+          {stakedCards.length > 0 && (
+            <div>
+              <div className="label mb-2">plugged in ({stakedCards.length})</div>
+              <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
+                {stakedCards.map((c) => (
+                  <CardChip key={c.serial} card={c} selected={selected.has(c.serial)} onToggle={() => toggle(c.serial)} />
+                ))}
+              </div>
+              {selectedStaked.length > 0 && (
+                <button onClick={unstakeSelected} disabled={busy} className="btn-ghost mt-2 w-full">
+                  {busy ? "…" : `UNPLUG ${selectedStaked.length}`}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* wallet */}
+          <div>
+            <div className="label mb-2">
+              in your wallet ({walletCards.length}) · {slotsFree} slot{slotsFree === 1 ? "" : "s"} free
+            </div>
+            {walletCards.length === 0 ? (
+              <p className="text-[13px] text-muted">
+                No unstaked cards. <a href="#mint" className="text-accent">Mint some →</a>
+              </p>
+            ) : (
+              <>
+                <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
+                  {walletCards.map((c) => (
+                    <CardChip key={c.serial} card={c} selected={selected.has(c.serial)} onToggle={() => toggle(c.serial)} />
+                  ))}
+                </div>
+                <button onClick={stakeSelected} disabled={busy} className="btn-primary mt-2 w-full">
+                  {busy
+                    ? "…"
+                    : !approved
+                      ? "APPROVE RIG (one-time)"
+                      : selectedWallet.length > 0
+                        ? `PLUG IN ${selectedWallet.length}`
+                        : "SELECT CARDS TO PLUG IN"}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* racks */}
+          {(racks ?? 0n) < 12n && walletCards.length > slotsFree && (
+            <button onClick={buyRack} disabled={busy} className="btn-ghost w-full text-amber">
+              {busy || nextRackPrice === undefined
+                ? "…"
+                : `BUY RACK (+4 slots) — ${Number(formatUnits(nextRackPrice, 18)).toFixed(5)} ETH`}
+            </button>
+          )}
+
+          {status && <p className="label normal-case tracking-normal">{status}</p>}
         </div>
       )}
     </div>
