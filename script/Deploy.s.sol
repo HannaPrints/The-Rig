@@ -65,7 +65,7 @@ contract Deploy is Script {
 
         PonsCurveAdapter adapter = new PonsCurveAdapter(c.curve); // nonce 1
         BuybackVault vault = new BuybackVault(c.gpu, c.keeper, ISwapAdapter(address(adapter))); // nonce 2
-        PonsFeeRouter feeRouter = new PonsFeeRouter(c.escrow, c.gpu, payable(address(vault)), c.treasury); // nonce 3
+        PonsFeeRouter feeRouter = new PonsFeeRouter(c.escrow, c.gpu, c.curve, payable(address(vault)), c.treasury); // nonce 3
         if (c.expectedFeeRouter != address(0)) {
             require(address(feeRouter) == c.expectedFeeRouter, "fee router address drifted from launch pin");
         }

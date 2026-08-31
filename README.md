@@ -84,8 +84,8 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 - [x] Permit signer service
 - [x] The site
 - [x] Mainnet launch runbook + **deterministic CA prediction** — [docs/DEPLOY.md](docs/DEPLOY.md)
+- [x] **Full mainnet-fork dry run** — launch → deploy → trade → fees → buyback → mint → mine → claim, all green (`script/dryrun-fork.sh`, results in [docs/DEPLOY.md](docs/DEPLOY.md))
 - [ ] Freeze token metadata → final CA
-- [ ] Robinhood Chain testnet dry run
 - [ ] Audit
 - [ ] Card art
 - [ ] $GPU launch on Pons

@@ -89,7 +89,7 @@ async function runOnce(): Promise<void> {
       const hash = await walletClient.writeContract({
         address: feeRouter,
         abi: feeRouterAbi,
-        functionName: "harvest",
+        functionName: "sweepAndHarvest",
       });
       await publicClient.waitForTransactionReceipt({ hash });
       console.log(`[keeper] harvested Pons fees in tx ${hash}`);

@@ -37,6 +37,7 @@ export const curveAbi = [
 // Pons V2 fee router (ours)
 export const feeRouterAbi = [
   { type: "function", name: "harvest", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  { type: "function", name: "sweepAndHarvest", stateMutability: "nonpayable", inputs: [], outputs: [] },
 ] as const;
 
 // Uniswap QuoterV2

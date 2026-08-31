@@ -55,10 +55,28 @@ contract MockEscrow is IPonsFeeEscrow {
 contract MockCurve is IPonsBondingCurve {
     MockGPU public immutable gpu;
     uint256 public rate; // tokens out per quote in, 1e18-scaled
+    MockEscrow public sweepEscrow;
+    address public sweepRecipient;
+    uint256 public pendingFees;
+    bool public sweepNeedsOperator;
 
     constructor(MockGPU gpu_, uint256 rate_) {
         gpu = gpu_;
         rate = rate_;
+    }
+
+    function setSweep(MockEscrow escrow_, address recipient, bool needsOperator) external payable {
+        sweepEscrow = escrow_;
+        sweepRecipient = recipient;
+        pendingFees = msg.value;
+        sweepNeedsOperator = needsOperator;
+    }
+
+    function sweepFees(uint256) external {
+        require(!sweepNeedsOperator, "InternalSwapRequiresOperator");
+        uint256 amount = pendingFees;
+        pendingFees = 0;
+        sweepEscrow.credit{value: amount}(sweepRecipient);
     }
 
     function buy(uint256 quoteIn, uint256 minTokensOut, address recipient)
@@ -104,7 +122,7 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         curve = new MockCurve(gpu, 1_000_000e18); // 1 ETH -> 1M GPU
         adapter = new PonsCurveAdapter(curve);
         vault = new BuybackVault(IERC20(address(gpu)), keeper, ISwapAdapter(address(adapter)));
-        feeRouter = new PonsFeeRouter(escrow, IERC20(address(gpu)), payable(address(vault)), treasury);
+        feeRouter = new PonsFeeRouter(escrow, IERC20(address(gpu)), curve, payable(address(vault)), treasury);
         card = new RigCard(address(this));
         card.setModules(address(this), address(this));
         rig = new Rig(IERC20(address(gpu)), card, this, address(vault));
@@ -145,6 +163,24 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         assertEq(gpu.balanceOf(address(rig)), 40_000e18);
         assertEq(gpu.balanceOf(address(vault)), 0);
         assertEq(rig.rewardRate(), 40_000e18 / rig.DURATION());
+    }
+
+    function test_SweepAndHarvestPullsCurveFees() public {
+        // fees batched inside the curve, no buyback slice pending
+        curve.setSweep{value: 5 ether}(escrow, address(feeRouter), false);
+        feeRouter.sweepAndHarvest();
+        assertEq(address(vault).balance, 4 ether);
+        assertEq(treasury.balance, 1 ether);
+    }
+
+    function test_SweepAndHarvestSurvivesOperatorGate() public {
+        // buyback slice pending: only Pons's operator may sweep — our sweep is
+        // best-effort and harvest still routes what the escrow already holds
+        curve.setSweep{value: 5 ether}(escrow, address(feeRouter), true);
+        escrow.credit{value: 2 ether}(address(feeRouter));
+        feeRouter.sweepAndHarvest(); // must not revert
+        assertEq(address(vault).balance, 1.6 ether);
+        assertEq(treasury.balance, 0.4 ether);
     }
 
     function test_HarvestEmptyEscrowIsNoop() public {

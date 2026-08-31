@@ -120,6 +120,35 @@ The keeper detects `curve.graduated()` and halts with a loud log. Then:
 2. `vault.setAdapter(v4Adapter)` from gov.
 3. Set `QUOTE_MODE=univ3` (v4 quoter) + `QUOTER_ADDRESS`, restart the keeper.
 
+## Dry run — verified 2026-08-31 (`script/dryrun-fork.sh`)
+
+The whole sequence rehearsed on an anvil fork of mainnet (the Robinhood testnet has
+no Pons contracts — a fork is the only faithful rehearsal). All checks passed, three
+independent fork blocks, same addresses every time:
+
+- **launchToken on the real factory → token landed exactly on `0xf25E…F053`**, curve
+  on `0xf16c…f5F1`, curve's fee recipient = the not-yet-deployed FeeRouter ✔
+- Deploy.s.sol nonces 1–11 → all 8 contracts on their planned addresses, pin check ✔
+- 1 ETH curve buy → **0.004165 ETH creator fee escrowed (41.65 bps of volume)** after
+  the buyback-and-lock slice (which buys $GPU off the curve and locks it — the
+  "buyback" is carved from the creator share, pre-graduation)
+- operator sweep (impersonated) → `sweepAndHarvest()` → **exact 80/20** vault/treasury ✔
+- keeper `vault.buy` on the real curve → rig streaming ~17.9 $GPU/sec ✔
+- $5 mint with a real EIP-712 permit (0.00125 ETH at $4,000 feed), 12,500 $GPU burn
+  gate, card staked, 12h warp, **775,094 $GPU earned and claimed** ✔
+
+Two findings the dry run surfaced (both fixed):
+
+1. **Pre-graduation fee sweeps**: curve fees batch inside the curve. Pons's fee-sweep
+   operator can sweep anytime; our FeeRouter (the curve's registered `deployer`) can
+   sweep only while no buyback slice is pending — so `sweepAndHarvest()` sweeps
+   best-effort and never blocks on the operator. Fees are never lost, only deferred
+   to the next operator sweep.
+2. **Never use anvil's well-known dev accounts on a mainnet fork.** Their keys are
+   public and drainer bots hold EIP-7702 delegations on them on the real chain — the
+   fork inherits that code and "treasury" auto-forwarded its ETH to a drainer until
+   we switched to fresh random wallets. Same lesson applies to real ops keys.
+
 ## Open items before mainnet
 
 - Chainlink ETH/USD feed address on Robinhood Chain (`ETH_USD_FEED`) — confirm from

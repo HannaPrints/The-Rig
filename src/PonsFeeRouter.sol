@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {IPonsFeeEscrow} from "./interfaces/External.sol";
+import {IPonsFeeEscrow, IPonsBondingCurve} from "./interfaces/External.sol";
 
 /// @title PonsFeeRouter — where the Pons creator fees land
 /// @notice Set as the launch's creatorFeeRecipient, so 70% of every $GPU trade fee
@@ -22,6 +22,7 @@ contract PonsFeeRouter is ReentrancyGuard {
 
     IPonsFeeEscrow public immutable escrow;
     IERC20 public immutable gpu;
+    IPonsBondingCurve public immutable curve;
     address payable public immutable vault;
     address payable public immutable treasury;
 
@@ -32,15 +33,34 @@ contract PonsFeeRouter is ReentrancyGuard {
 
     error EthTransferFailed();
 
-    constructor(IPonsFeeEscrow escrow_, IERC20 gpu_, address payable vault_, address payable treasury_) {
+    constructor(
+        IPonsFeeEscrow escrow_,
+        IERC20 gpu_,
+        IPonsBondingCurve curve_,
+        address payable vault_,
+        address payable treasury_
+    ) {
         escrow = escrow_;
         gpu = gpu_;
+        curve = curve_;
         vault = vault_;
         treasury = treasury_;
     }
 
     /// @dev Escrow claims and clamp refunds arrive as plain sends.
     receive() external payable {}
+
+    /// @notice Sweep the curve's accrued fees into the escrow (when possible), then
+    ///         harvest. Pre-graduation, curve fees batch inside the curve: Pons's
+    ///         fee-sweep operator can sweep anytime; this contract — the curve's
+    ///         registered deployer — can sweep whenever no buyback slice is pending.
+    ///         The sweep is best-effort: fees are never lost, only deferred to the
+    ///         next operator sweep, and harvest() still routes whatever the escrow
+    ///         already holds.
+    function sweepAndHarvest() external {
+        try curve.sweepFees(0) {} catch {}
+        this.harvest();
+    }
 
     function harvest() external nonReentrant {
         // pull whatever the escrow holds for us; tolerate empty balances

@@ -44,4 +44,8 @@ interface IPonsBondingCurve {
     function buy(uint256 quoteIn, uint256 minTokensOut, address recipient) external payable returns (uint256 tokensOut);
     function graduated() external view returns (bool);
     function quoteReserve() external view returns (uint256);
+    /// @dev Callable by the Pons fee-sweep operator anytime, or by the curve's
+    ///      registered deployer (our PonsFeeRouter) while no buyback slice is
+    ///      pending. Distributes accrued fees: creator share → fee escrow.
+    function sweepFees(uint256 minBuybackTokensOut) external;
 }
