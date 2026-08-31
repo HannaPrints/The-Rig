@@ -1,4 +1,4 @@
-import { links } from "../config";
+import { addresses, links } from "../config";
 
 export function Footer() {
   return (
@@ -41,8 +41,24 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-line py-4 text-center">
-        <span className="label">plug in · mine · claim</span>
+      <div className="border-t border-line">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1.5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <span className="num text-[11px] text-muted">
+            $GPU{" "}
+            <a href={`${links.explorer}/token/${addresses.gpu}`} target="_blank" rel="noreferrer" className="text-ink hover:text-accent">
+              {addresses.gpu}
+            </a>
+          </span>
+          <span className="num text-[11px] text-muted">
+            CARDS{" "}
+            <a href={`${links.explorer}/token/${addresses.card}`} target="_blank" rel="noreferrer" className="text-ink hover:text-accent">
+              {addresses.card}
+            </a>
+          </span>
+        </div>
+        <div className="border-t border-line py-4 text-center">
+          <span className="label">plug in · mine · claim</span>
+        </div>
       </div>
     </footer>
   );

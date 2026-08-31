@@ -1,7 +1,37 @@
+import { useState } from "react";
 import { useReadContract } from "wagmi";
-import { addresses, deployed } from "../config";
+import { addresses, deployed, links } from "../config";
 import { shopAbi, rigAbi } from "../abi";
 import { RigMonitor } from "./RigMonitor";
+
+function CaChip() {
+  const [copied, setCopied] = useState(false);
+  const ca = addresses.gpu;
+  return (
+    <div className="mt-8 inline-flex max-w-full items-center gap-3 border border-line bg-panel px-3.5 py-2.5">
+      <span className="label shrink-0 text-accent">$gpu ca</span>
+      <a
+        href={`${links.explorer}/token/${ca}`}
+        target="_blank"
+        rel="noreferrer"
+        className="num min-w-0 truncate text-[12px] text-ink transition-colors hover:text-accent"
+        title={ca}
+      >
+        {ca}
+      </a>
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(ca);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="label shrink-0 cursor-pointer transition-colors hover:text-accent"
+      >
+        {copied ? "copied ✓" : "copy"}
+      </button>
+    </div>
+  );
+}
 
 export function Hero() {
   const { data: made } = useReadContract({
@@ -34,7 +64,8 @@ export function Hero() {
             as long as it's plugged in — streamed every second, pro-rata by hashrate, funded by
             open-market buybacks. <span className="text-ink">$GPU is never minted. Only bought.</span>
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-4">
+          <CaChip />
+          <div className="mt-6 flex flex-wrap items-center gap-4">
             <a href="#mint" className="btn-primary">
               MINT — $5
             </a>

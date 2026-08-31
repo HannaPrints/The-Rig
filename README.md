@@ -18,6 +18,10 @@
   <br/><sub>OpenSea indexes Robinhood Chain natively; the collection link resolves at deploy.</sub>
 </p>
 
+<p align="center">
+  <b>$GPU CA:</b> <a href="https://robinhoodchain.blockscout.com/token/0x3Da22F970a0a048d3830fDE22b94017B83a3802E"><code>0x3Da22F970a0a048d3830fDE22b94017B83a3802E</code></a>
+</p>
+
 <p align="center"><b>$GPU is never minted. Only bought.</b><br/><sub>Building fully in public — every contract, every decision, every number, right here.</sub></p>
 
 ---
