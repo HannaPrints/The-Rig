@@ -34,6 +34,8 @@ export const env = {
   // "curve" until $GPU graduates off the Pons bonding curve, then "univ3"/v4
   quoteMode: (process.env.QUOTE_MODE ?? "curve") as "curve" | "univ3",
   curveAddress: () => required("CURVE_ADDRESS") as `0x${string}`,
+  // set to enable auto-harvest of Pons creator fees each keeper window
+  feeRouterAddress: () => (process.env.FEE_ROUTER_ADDRESS ?? "") as `0x${string}` | "",
   quoterAddress: () => required("QUOTER_ADDRESS") as `0x${string}`,
   gpuAddress: () => required("GPU_TOKEN") as `0x${string}`,
   wethAddress: () => required("WETH_ADDRESS") as `0x${string}`,

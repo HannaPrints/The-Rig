@@ -22,8 +22,8 @@ the fact, and anyone can re-verify their tiers from the public seed.
 ## Buyback keeper (`npm run keeper`)
 
 Every 12-hour window: pot ETH → open-market $GPU → `Rig.notifyRewardAmount`.
-Pons creator fees are **not** auto-claimed — they sit in the Pons escrow until ops
-manually calls `feeRouter.sweepAndHarvest()` (30% pot / 70% treasury).
+Each window it also auto-harvests Pons creator fees when `FEE_ROUTER_ADDRESS` is
+set: `sweepAndHarvest()` pulls the escrow and splits 30% pot / 70% treasury.
 Implements the impact ceiling by probing the pool's marginal price and halving the
 buy until average execution is within `MAX_IMPACT_BPS`, so deep pots ladder across
 windows instead of donating slippage. The vault re-verifies output by balance delta
