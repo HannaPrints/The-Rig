@@ -6,13 +6,14 @@
  * The frontend talks to this endpoint instead (same origin → no CORS), and we
  * forward server-side where CORS doesn't apply.
  *
- * Upstream defaults to dRPC's Robinhood endpoint (higher limits than the
- * official public RPC). Override with RPC_UPSTREAM on Vercel for a dedicated
- * provider. A short warm-instance cache absorbs duplicate read bursts so many
- * concurrent visitors don't each hit upstream for the same block-y data.
+ * Upstream defaults to the official Robinhood RPC — it works fine server-side
+ * (the CORS bug is browser-only, which this proxy sidesteps). Override with
+ * RPC_UPSTREAM on Vercel for a dedicated provider (Alchemy/dRPC key URL) to
+ * raise limits. A short warm-instance cache absorbs duplicate read bursts so
+ * many concurrent visitors don't each hit upstream for the same data.
  */
-const UPSTREAM = process.env.RPC_UPSTREAM || "https://robinhood.drpc.org";
-const CACHE_TTL_MS = 3000;
+const UPSTREAM = process.env.RPC_UPSTREAM || "https://rpc.mainnet.chain.robinhood.com";
+const CACHE_TTL_MS = 4000;
 
 // Module scope persists across invocations on a warm Vercel instance.
 const cache = new Map<string, { at: number; status: number; body: string }>();
@@ -42,11 +43,14 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 9000);
     const upstream = await fetch(UPSTREAM, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: raw,
-    });
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(timer));
     const body = await upstream.text();
     if (cacheable && upstream.ok) {
       cache.set(key, { at: Date.now(), status: upstream.status, body });
