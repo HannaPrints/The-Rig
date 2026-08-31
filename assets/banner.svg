@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" font-family="ui-monospace, 'JetBrains Mono', Menlo, monospace">
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#0f2418" stroke-width="1"/>
+    </pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#000000" opacity="0.25"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="vig" cx="50%" cy="50%" r="75%">
+      <stop offset="60%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.55"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="320" fill="#04070a"/>
+  <rect width="1280" height="320" fill="url(#grid)"/>
+
+  <!-- GPU card -->
+  <g transform="translate(96,88)" filter="url(#glow)">
+    <rect x="0" y="24" width="176" height="80" rx="6" fill="#0a120e" stroke="#3dff88" stroke-width="4"/>
+    <circle cx="48" cy="64" r="24" fill="none" stroke="#3dff88" stroke-width="4"/>
+    <circle cx="48" cy="64" r="5" fill="#3dff88"/>
+    <circle cx="120" cy="64" r="24" fill="none" stroke="#3dff88" stroke-width="4"/>
+    <circle cx="120" cy="64" r="5" fill="#3dff88"/>
+    <rect x="156" y="38" width="12" height="18" fill="#ffb454"/>
+    <rect x="16" y="104" width="104" height="14" fill="#ffb454"/>
+    <rect x="130" y="104" width="28" height="14" fill="#ffb454"/>
+    <path d="M8 0 h40 l12 -14 l16 28 l12 -14 h80" fill="none" stroke="#3dff88" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="336" y="160" font-size="88" font-weight="bold" letter-spacing="18" fill="#3dff88" filter="url(#glow)">THE RIG</text>
+  <text x="342" y="204" font-size="20" letter-spacing="8" fill="#b7d9c4">PLUG IN. MINE. CLAIM.</text>
+
+  <!-- spec line -->
+  <text x="342" y="248" font-size="15" letter-spacing="2" fill="#1d7a46">10,000 CARDS · $5 · ROBINHOOD CHAIN · $GPU IS NEVER MINTED — ONLY BOUGHT</text>
+
+  <!-- footer strip -->
+  <rect x="0" y="292" width="1280" height="28" fill="#0a120e"/>
+  <text x="24" y="311" font-size="13" letter-spacing="3" fill="#ffb454">▸ 70% OF EVERYTHING → MINERS ▸ ONE STREAM · EVERY SECOND · PRO-RATA BY HASHRATE ▸ THE RIG HAS NO OWNER ▸ FUSION ONLY SHRINKS THE SUPPLY</text>
+
+  <rect width="1280" height="320" fill="url(#scan)"/>
+  <rect width="1280" height="320" fill="url(#vig)"/>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#04070a"/>
+  <!-- GPU card body -->
+  <rect x="8" y="20" width="44" height="20" rx="2" fill="#0a120e" stroke="#3dff88" stroke-width="2"/>
+  <!-- fans -->
+  <circle cx="20" cy="30" r="6" fill="none" stroke="#3dff88" stroke-width="2"/>
+  <circle cx="20" cy="30" r="1.6" fill="#3dff88"/>
+  <circle cx="38" cy="30" r="6" fill="none" stroke="#3dff88" stroke-width="2"/>
+  <circle cx="38" cy="30" r="1.6" fill="#3dff88"/>
+  <!-- power connector -->
+  <rect x="47" y="24" width="3" height="5" fill="#ffb454"/>
+  <!-- PCIe fingers -->
+  <rect x="12" y="40" width="26" height="4" fill="#ffb454"/>
+  <rect x="41" y="40" width="7" height="4" fill="#ffb454"/>
+  <!-- hashrate blip -->
+  <path d="M10 14 h10 l3 -4 l4 8 l3 -4 h24" fill="none" stroke="#3dff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

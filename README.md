@@ -1,67 +1,94 @@
-# The Rig ⛏️
+<p align="center">
+  <img src="assets/banner.svg" alt="THE RIG — plug in. mine. claim." width="100%" />
+</p>
 
-**A mining game on Robinhood Chain. Mint a graphics card for $5, slot it into your rig, and it earns $GPU for as long as it's plugged in.**
+<p align="center">
+  <a href="https://github.com/HannaPrints/The-Rig/actions/workflows/test.yml"><img src="https://github.com/HannaPrints/The-Rig/actions/workflows/test.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/chain-Robinhood%20Chain%20(4663)-3dff88" alt="Robinhood Chain" />
+  <img src="https://img.shields.io/badge/mint-10%2C000%20%C3%97%20%245-ffb454" alt="Mint" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-9fb4a6" alt="MIT" /></a>
+</p>
 
-Building this fully in public. Every contract, every decision, every number — right here.
+<h3 align="center">A mining game on Robinhood Chain.<br/>Mint a graphics card for $5, slot it into your rig, and it earns $GPU for as long as it's plugged in.</h3>
 
-## How it works
+<p align="center"><b>$GPU is never minted. Only bought.</b><br/><sub>Building fully in public — every contract, every decision, every number, right here.</sub></p>
 
-- **10,000 graphics cards**, $5 each. Every card has a hashrate. Higher tier = more power:
+---
 
-  | Tier | Card | MH/s | Odds |
-  |---|---|---|---|
-  | Common | Spud GT 210 | 10 | 52% |
-  | Uncommon | Miner MX 450 | 25 | 26% |
-  | Rare | Volt VX 3060 | 60 | 13% |
-  | Epic | Blaze BZ 4080 | 150 | 7% |
-  | Legendary | Quantum QX 9090 | 400 | 2% |
-  | Mythic | Singularity ∞ | 1,000 | fusion only |
-  | Forged | ??? | 2,500 | fusion only |
-
-- **One stream, every second, pro-rata by hashrate.** Rewards drip over rolling 12-hour windows. The stream pauses when the rig is empty — time never steals from miners.
-- **$GPU is never minted. Only bought.** 70% of every mint, every overclock, every fusion, every rack, and 70% of the token's own trading fees buy $GPU on the open market and stream it straight to miners. The other 30% funds the project.
-- **Overclock** (+20% hashrate per level, up to +100%), **fuse** two identical cards into the next tier (supply only shrinks), buy **racks** to expand your room from 4 to 52 slots.
-- **Burn gate:** every mint burns 12,500 $GPU from your wallet. At full mint that's 125,000,000 — 12.5% of everything that will ever exist, gone.
-- **$GPU launches on [Pons](https://pons.fun)** — 1B fixed supply, and 70% of the 1% pool fee flows back into miner buybacks forever. Volume is yield.
-
-## Trust model
-
-- The **Rig** has no owner. No pause, no parameter changes, no withdraw function.
-- The **keeper** has one privilege: buy $GPU with the pot and hand it to the rig. Bounded by minimum output, verified by balance delta. It cannot pay itself and it cannot withdraw.
-- The **RoyaltyRouter** has no owner at all — hardcoded 70/30, permissionless flush.
-- Tier randomness is **committed in the signed mint permit before your tiers are computed** — reproducible by anyone, riggable by no one.
-- Anti-bot by construction: contracts can't mint, permits expire in 5 minutes, 400 mints/hour on-chain, 30s wallet cooldown. A sellout takes 25+ hours, mathematically.
-
-## Contracts
-
-| Contract | Role |
-|---|---|
-| `RigCard` | ERC-721 cards: tiers, overclock levels, fusion, sealed cosmetics |
-| `Shop` | Mints, overclocks, fusions, racks — every payment splits 70/30 at receipt |
-| `Rig` | Staking + the 12-hour drip (Synthetix-style, per-second, pro-rata by MH) |
-| `BuybackVault` | The miners' pot — ETH in, open-market $GPU out, into the stream |
-| `RoyaltyRouter` | Ownerless 70/30 royalty splitter |
-| `Workshop` | Cosmetics: burn $GPU to reroll or seal. Gameplay untouched |
-
-```bash
-forge build
-forge test
+```
+burn $GPU → mint → slot in → mine $GPU → claim → spend into upgrades → mine harder
 ```
 
-Deploy (Robinhood Chain): `forge script script/Deploy.s.sol --rpc-url $RPC --broadcast` with `GPU_TOKEN`, `ETH_USD_FEED`, `SWAP_ADAPTER`, `KEEPER`, `SIGNER`, `TREASURY` set.
+## The game
+
+**10,000 graphics cards, $5 each.** Every card rolls a tier from randomness committed *before* your transaction lands:
+
+| Tier | Card | MH/s | Odds |
+|---|---|---:|---:|
+| Common | Spud GT 210 | 10 | 52% |
+| Uncommon | Miner MX 450 | 25 | 26% |
+| Rare | Volt VX 3060 | 60 | 13% |
+| Epic | Blaze BZ 4080 | 150 | 7% |
+| Legendary | Quantum QX 9090 | 400 | 2% |
+| Mythic | Singularity ∞ | 1,000 | fusion only |
+| Forged | ??? | 2,500 | fusion only |
+
+- **One stream, every second, pro-rata by hashrate.** Rewards drip over rolling 12-hour windows and the stream pauses when the rig is empty — time never steals from miners.
+- **The money loop:** 70% of every mint, overclock, fusion, rack, royalty — *and 70% of $GPU's own trading fees on [Pons](https://pons.fun)* — buys $GPU on the open market and streams it straight to miners. Volume is yield.
+- **The burn:** every mint torches 12,500 $GPU from your wallet. Full mint = 125,000,000 burned — 12.5% of everything that will ever exist.
+- **Climb:** overclock (+20%/level, max +100%), fuse two identical cards into the next tier (supply only shrinks), expand your room from 4 to 52 slots.
+
+## The trust model
+
+| Piece | Power | Ceiling |
+|---|---|---|
+| `Rig` | none — **no owner** | no pause, no parameters, no withdraw |
+| Keeper | buy $GPU with the pot | min-output + balance-delta verified; can't pay itself |
+| `RoyaltyRouter` | none — no owner at all | hardcoded 70/30, permissionless flush |
+| Shop owner | rotate permit signer, tune burn dial | dial is band-limited at deploy; can't touch cards or the 70% |
+| Mint randomness | committed in the signed permit | reproducible by anyone, riggable by no one |
+
+Anti-bot by construction: contracts can't mint, permits expire in 5 minutes, 400 mints/hour on-chain, 30s wallet cooldown. **A sellout takes 25+ hours, mathematically.**
+
+## The monorepo
+
+```
+src/        Solidity — RigCard · Shop · Rig · BuybackVault · RoyaltyRouter · Workshop · adapters
+test/       29 Foundry tests
+script/     deployment
+services/   permit signer (the bot gate + committed randomness) · buyback keeper
+web/        the site — Vite + React + wagmi, CRT phosphor terminal
+docs/       the full protocol deep dive & economic model
+```
+
+```bash
+# contracts
+forge build && forge test
+
+# services
+cd services && npm i && npm run typecheck   # npm run signer / npm run keeper
+
+# site
+cd web && npm i && npm run dev
+```
+
+Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.robinhood.com --broadcast` with `GPU_TOKEN`, `ETH_USD_FEED`, `SWAP_ADAPTER`, `KEEPER`, `SIGNER`, `TREASURY` set.
 
 ## Status
 
 - [x] Protocol deep dive & economic model — [docs/DEEPDIVE.md](docs/DEEPDIVE.md)
-- [x] Core contracts + test suite (26 tests)
-- [ ] Pons pool swap adapter (Uniswap v4 hook integration)
-- [ ] Keeper bot + permit signer service
+- [x] Core contracts + 29 passing tests
+- [x] Swap adapter (Uniswap v3 route; v4-hook adapter lands when the Pons V2 pool ABI is verified on mainnet)
+- [x] Buyback keeper with the price-impact ladder
+- [x] Permit signer service
+- [x] The site
+- [ ] Pons creator-fee claim wiring
 - [ ] Robinhood Chain testnet deployment
 - [ ] Audit
-- [ ] Art
+- [ ] Card art
 - [ ] $GPU launch on Pons
 - [ ] Mint
 
 ## Not financial advice
 
-Unaudited. Unlaunched. This is a game — only spend what you are happy to lose.
+Unaudited. Unlaunched. The rig has no owner, the keeper can only buy, and the code is public — but this is a game. **Only spend what you are happy to lose.**
