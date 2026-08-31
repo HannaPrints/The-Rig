@@ -26,6 +26,9 @@ export function Nav() {
           <a href="#mint" className="label hidden transition-colors hover:text-accent md:block">
             shop
           </a>
+          <a href="#faq" className="label hidden transition-colors hover:text-accent md:block">
+            faq
+          </a>
           <a
             href={links.openSea}
             target="_blank"

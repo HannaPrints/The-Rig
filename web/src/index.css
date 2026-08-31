@@ -154,6 +154,14 @@ html {
   -webkit-text-stroke: 1px var(--color-line);
 }
 
+/* faq accordion — hide the native marker, keep it keyboard-friendly */
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary {
+  list-style: none;
+}
+
 ::selection {
   background: var(--color-accent);
   color: #06130b;
