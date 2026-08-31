@@ -19,7 +19,7 @@ export function useCards(user?: `0x${string}`) {
     address: addresses.card,
     abi: cardAbi,
     functionName: "nextSerial",
-    query: { refetchInterval: 15_000 },
+    query: { refetchInterval: 45_000 },
   });
 
   const count = nextSerial ? Number(nextSerial) - 1 : 0;
@@ -40,7 +40,7 @@ export function useCards(user?: `0x${string}`) {
 
   const { data, isLoading, refetch } = useReadContracts({
     contracts: [...ownerCalls, ...stakerCalls],
-    query: { enabled: !!user && count > 0, refetchInterval: 10_000 },
+    query: { enabled: !!user && count > 0, refetchInterval: 25_000 },
   });
 
   const mine: number[] = [];
@@ -59,7 +59,7 @@ export function useCards(user?: `0x${string}`) {
   ]);
   const { data: meta } = useReadContracts({
     contracts: metaCalls,
-    query: { enabled: mine.length > 0, refetchInterval: 10_000 },
+    query: { enabled: mine.length > 0, refetchInterval: 25_000 },
   });
 
   const cards: CardInfo[] = [];

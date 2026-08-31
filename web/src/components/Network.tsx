@@ -50,7 +50,7 @@ function BigStat({ label, value, sub, accent }: { label: string; value: string; 
 }
 
 export function Network() {
-  const live = { query: { enabled: deployed, refetchInterval: 6_000 } };
+  const live = { query: { enabled: deployed, refetchInterval: 20_000 } };
   const { data: made } = useReadContract({ address: addresses.shop, abi: shopAbi, functionName: "madeCount", ...live });
   const { data: living } = useReadContract({ address: addresses.card, abi: cardAbi, functionName: "livingCount", ...live });
   const { data: weight } = useReadContract({ address: addresses.rig, abi: rigAbi, functionName: "totalWeight", ...live });

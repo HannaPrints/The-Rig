@@ -22,14 +22,14 @@ export function MintPanel() {
   });
   const { data: made } = useReadContract({
     address: addresses.shop, abi: shopAbi, functionName: "madeCount",
-    query: { enabled: deployed, refetchInterval: 10_000 },
+    query: { enabled: deployed, refetchInterval: 30_000 },
   });
   const { data: burnPerMint } = useReadContract({
     address: addresses.shop, abi: shopAbi, functionName: "burnPerMint", query: { enabled: deployed },
   });
   const { data: gpuBal } = useReadContract({
     address: addresses.gpu, abi: erc20Abi, functionName: "balanceOf",
-    args: address ? [address] : undefined, query: { enabled: deployed && !!address, refetchInterval: 10_000 },
+    args: address ? [address] : undefined, query: { enabled: deployed && !!address, refetchInterval: 30_000 },
   });
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: addresses.gpu, abi: erc20Abi, functionName: "allowance",

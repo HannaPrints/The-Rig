@@ -6,7 +6,13 @@ import { config } from "./wagmi";
 import App from "./App";
 import "./index.css";
 
-const queryClient = new QueryClient();
+// staleTime dedupes identical reads across components (e.g. madeCount used in
+// Hero + Network + MintPanel → one fetch), and we don't refetch on focus.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 12_000, refetchOnWindowFocus: false, retry: 2 },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

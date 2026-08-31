@@ -38,7 +38,7 @@ export function MyRig() {
   const walletCards = cards.filter((c) => !c.staked);
   const stakedCards = cards.filter((c) => c.staked);
 
-  const q = { query: { enabled: deployed && !!address, refetchInterval: 8_000 } };
+  const q = { query: { enabled: deployed && !!address, refetchInterval: 20_000 } };
   const { data: earned, refetch: refetchEarned } = useReadContract({
     address: addresses.rig, abi: rigAbi, functionName: "earned", args: address ? [address] : undefined, ...q,
   });

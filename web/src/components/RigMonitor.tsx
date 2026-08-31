@@ -50,7 +50,7 @@ function CardArt() {
 }
 
 export function RigMonitor() {
-  const q = { query: { enabled: deployed, refetchInterval: 5_000 } };
+  const q = { query: { enabled: deployed, refetchInterval: 20_000 } };
   const { data: weight } = useReadContract({ address: addresses.rig, abi: rigAbi, functionName: "totalWeight", ...q });
   const { data: rate } = useReadContract({ address: addresses.rig, abi: rigAbi, functionName: "rewardRate", ...q });
   const { data: living } = useReadContract({ address: addresses.card, abi: cardAbi, functionName: "livingCount", ...q });
