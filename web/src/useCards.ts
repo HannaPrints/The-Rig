@@ -40,7 +40,8 @@ export function useCards(user?: `0x${string}`) {
 
   const { data, isLoading, refetch } = useReadContracts({
     contracts: [...ownerCalls, ...stakerCalls],
-    query: { enabled: !!user && count > 0, refetchInterval: 25_000 },
+    batchSize: 0, // let the multicall aggregator pack them into one call
+    query: { enabled: !!user && count > 0, refetchInterval: 25_000, placeholderData: (p) => p },
   });
 
   const mine: number[] = [];
@@ -59,7 +60,8 @@ export function useCards(user?: `0x${string}`) {
   ]);
   const { data: meta } = useReadContracts({
     contracts: metaCalls,
-    query: { enabled: mine.length > 0, refetchInterval: 25_000 },
+    batchSize: 0,
+    query: { enabled: mine.length > 0, refetchInterval: 25_000, placeholderData: (p) => p },
   });
 
   const cards: CardInfo[] = [];

@@ -4,12 +4,18 @@
  * The public Robinhood RPC sends a malformed CORS header
  * (`Access-Control-Allow-Origin: *,*`), so browsers block direct calls to it.
  * The frontend talks to this endpoint instead (same origin → no CORS), and we
- * forward to the real RPC server-side where CORS doesn't apply.
+ * forward server-side where CORS doesn't apply.
  *
- * Set RPC_UPSTREAM on Vercel to a dedicated provider (Alchemy/dRPC) for
- * production throughput; defaults to the public endpoint.
+ * Upstream defaults to dRPC's Robinhood endpoint (higher limits than the
+ * official public RPC). Override with RPC_UPSTREAM on Vercel for a dedicated
+ * provider. A short warm-instance cache absorbs duplicate read bursts so many
+ * concurrent visitors don't each hit upstream for the same block-y data.
  */
-const UPSTREAM = process.env.RPC_UPSTREAM || "https://rpc.mainnet.chain.robinhood.com";
+const UPSTREAM = process.env.RPC_UPSTREAM || "https://robinhood.drpc.org";
+const CACHE_TTL_MS = 3000;
+
+// Module scope persists across invocations on a warm Vercel instance.
+const cache = new Map<string, { at: number; status: number; body: string }>();
 
 export default async function handler(req: any, res: any) {
   if (req.method === "OPTIONS") {
@@ -20,19 +26,37 @@ export default async function handler(req: any, res: any) {
   }
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
+  const raw = typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? {});
+
+  // Cache only read-shaped payloads (no eth_sendRawTransaction etc.)
+  const cacheable = !raw.includes("eth_send") && !raw.includes("eth_estimateGas");
+  const key = raw;
+  if (cacheable) {
+    const hit = cache.get(key);
+    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+      res.setHeader("content-type", "application/json");
+      res.setHeader("access-control-allow-origin", "*");
+      res.setHeader("x-rig-cache", "hit");
+      return res.status(hit.status).send(hit.body);
+    }
+  }
+
   try {
-    const body = typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? {});
     const upstream = await fetch(UPSTREAM, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body,
+      body: raw,
     });
-    const text = await upstream.text();
+    const body = await upstream.text();
+    if (cacheable && upstream.ok) {
+      cache.set(key, { at: Date.now(), status: upstream.status, body });
+      if (cache.size > 500) cache.clear(); // crude bound
+    }
     res.setHeader("content-type", "application/json");
     res.setHeader("access-control-allow-origin", "*");
     res.setHeader("cache-control", "no-store");
-    return res.status(upstream.status).send(text);
-  } catch (e) {
+    return res.status(upstream.status).send(body);
+  } catch {
     return res.status(502).json({ error: "rpc proxy upstream failed" });
   }
 }

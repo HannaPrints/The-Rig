@@ -18,4 +18,9 @@ export const robinhoodChain = defineChain({
   blockExplorers: {
     default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" },
   },
+  // Multicall3 (verified deployed) — lets wagmi aggregate the card scan and all
+  // simultaneous reads into a single eth_call instead of one request per read.
+  contracts: {
+    multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" },
+  },
 });
