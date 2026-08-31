@@ -126,12 +126,14 @@ identity; the token's trading-fee creator share routes 30% to miners / 70% to th
 admin treasury. Buying through our own curve still pays the 1% fee, part of which
 returns via the escrow.
 
-## Graduation switchover (at 4.2 ETH raised)
+## Graduation switchover — DONE 2026-08-31
 
-The keeper detects `curve.graduated()` and halts with a loud log. Then:
-1. Write + deploy the Uniswap v4 hook-pool adapter (the locked pool the curve seeds).
-2. `vault.setAdapter(v4Adapter)` from gov.
-3. Set `QUOTE_MODE=univ3` (v4 quoter) + `QUOTER_ADDRESS`, restart the keeper.
+$GPU graduated within ~an hour of launch (4.2 ETH raised). PonsV4Adapter deployed at
+`0x256F0A558E492D507e2adb72e316a2686f7faB05` (unlock-callback swapper pinned to the
+graduated pool: PoolManager `0x8366…0951`, hook `0xE5e7…e044`, fee 0, tickSpacing
+200), vault rotated via `setAdapter`, keeper switched to `QUOTE_MODE=adapter`
+(quotes by simulating the real vault→adapter→pool path). First mainnet buyback:
+tx `0xb59b7c16…47a0` — the rig stream is live.
 
 ## Dry run — verified 2026-08-31 (`script/dryrun-fork.sh`)
 

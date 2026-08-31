@@ -99,7 +99,8 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 | RigCard (ERC-721) | `0xA35eC0E14fB2b325CcA9EB0Caf3E9CBDB1A8ACB6` |
 | BuybackVault | `0xcA1654Fa5815Db81674655830d4356D0A212c221` |
 | PonsFeeRouter | `0x1C92372E0f2D0eD1CF716632734f041C57f60a8F` |
-| Workshop / RoyaltyRouter / Adapter | `0x1446…67ea` / `0x23fB…77bC` / `0x9873…5CF2` |
+| Workshop / RoyaltyRouter | `0x1446…67ea` / `0x23fB…77bC` |
+| PonsV4Adapter (live buy venue) | `0x256F0A558E492D507e2adb72e316a2686f7faB05` |
 
 The site ships its own permit signer as a Vercel function (`web/api/permit.ts`) — deploy `web/` on Vercel with one env var (`SIGNER_PK`) and the mint is live.
 

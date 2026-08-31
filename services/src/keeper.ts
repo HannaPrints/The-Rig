@@ -22,7 +22,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { env, robinhoodChain } from "./config.js";
-import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi, escrowAbi } from "./abi.js";
+import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi, escrowAbi, adapterAbi } from "./abi.js";
 
 const account = privateKeyToAccount(env.keeperPk());
 const publicClient = createPublicClient({ chain: robinhoodChain, transport: http(env.rpcUrl) });
@@ -34,6 +34,18 @@ const PROBE_ETH = 1_000_000_000_000_000n; // 0.001 ETH marginal-price probe
 const MAX_CHUNKS_PER_RUN = 4;
 
 async function quoteOut(amountIn: bigint): Promise<bigint> {
+  if (env.quoteMode === "adapter") {
+    // simulate the exact production path: vault -> adapter -> v4 pool
+    const { result } = await publicClient.simulateContract({
+      address: env.adapterAddress(),
+      abi: adapterAbi,
+      functionName: "swapExactETHForGPU",
+      args: [1n, vault],
+      account: vault,
+      value: amountIn,
+    });
+    return result;
+  }
   if (env.quoteMode === "curve") {
     // simulating the real buy from the vault (which holds the ETH) IS the quote:
     // exact fees and near-graduation clamping included

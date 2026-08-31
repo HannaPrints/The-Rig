@@ -31,8 +31,9 @@ export const env = {
   // keeper service
   keeperPk: () => required("KEEPER_PK") as `0x${string}`,
   vaultAddress: () => required("VAULT_ADDRESS") as `0x${string}`,
-  // "curve" until $GPU graduates off the Pons bonding curve, then "univ3"/v4
-  quoteMode: (process.env.QUOTE_MODE ?? "curve") as "curve" | "univ3",
+  // "curve" pre-graduation, "adapter" post-graduation (simulates the live adapter), "univ3" legacy
+  quoteMode: (process.env.QUOTE_MODE ?? "adapter") as "curve" | "adapter" | "univ3",
+  adapterAddress: () => required("ADAPTER_ADDRESS") as `0x${string}`,
   curveAddress: () => required("CURVE_ADDRESS") as `0x${string}`,
   // set to enable auto-harvest of Pons creator fees each keeper window
   feeRouterAddress: () => (process.env.FEE_ROUTER_ADDRESS ?? "") as `0x${string}` | "",

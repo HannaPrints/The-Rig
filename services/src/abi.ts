@@ -40,6 +40,20 @@ export const feeRouterAbi = [
   { type: "function", name: "sweepAndHarvest", stateMutability: "nonpayable", inputs: [], outputs: [] },
 ] as const;
 
+// swap adapter (quote = simulate the real buy from the vault)
+export const adapterAbi = [
+  {
+    type: "function",
+    name: "swapExactETHForGPU",
+    stateMutability: "payable",
+    inputs: [
+      { name: "minOut", type: "uint256" },
+      { name: "to", type: "address" },
+    ],
+    outputs: [{ name: "out", type: "uint256" }],
+  },
+] as const;
+
 // Pons V2 fee escrow (read-only, to skip empty harvests)
 export const escrowAbi = [
   {
