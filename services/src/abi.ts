@@ -40,6 +40,27 @@ export const feeRouterAbi = [
   { type: "function", name: "sweepAndHarvest", stateMutability: "nonpayable", inputs: [], outputs: [] },
 ] as const;
 
+// Pons V2 fee escrow (read-only, to skip empty harvests)
+export const escrowAbi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "recipient", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "balanceOfToken",
+    stateMutability: "view",
+    inputs: [
+      { name: "recipient", type: "address" },
+      { name: "token", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+
 // Uniswap QuoterV2
 export const quoterAbi = [
   {

@@ -36,6 +36,7 @@ export const env = {
   curveAddress: () => required("CURVE_ADDRESS") as `0x${string}`,
   // set to enable auto-harvest of Pons creator fees each keeper window
   feeRouterAddress: () => (process.env.FEE_ROUTER_ADDRESS ?? "") as `0x${string}` | "",
+  feeEscrowAddress: () => (process.env.FEE_ESCROW ?? "") as `0x${string}` | "",
   quoterAddress: () => required("QUOTER_ADDRESS") as `0x${string}`,
   gpuAddress: () => required("GPU_TOKEN") as `0x${string}`,
   wethAddress: () => required("WETH_ADDRESS") as `0x${string}`,

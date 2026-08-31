@@ -22,7 +22,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { env, robinhoodChain } from "./config.js";
-import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi } from "./abi.js";
+import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi, escrowAbi } from "./abi.js";
 
 const account = privateKeyToAccount(env.keeperPk());
 const publicClient = createPublicClient({ chain: robinhoodChain, transport: http(env.rpcUrl) });
@@ -87,6 +87,22 @@ async function runOnce(): Promise<void> {
   const feeRouter = env.feeRouterAddress();
   if (feeRouter) {
     try {
+      // free read first: skip the tx when the escrow holds nothing for us
+      const escrow = env.feeEscrowAddress();
+      if (escrow) {
+        const [ethOwed, gpuOwed] = await Promise.all([
+          publicClient.readContract({ address: escrow, abi: escrowAbi, functionName: "balanceOf", args: [feeRouter] }),
+          publicClient.readContract({
+            address: escrow,
+            abi: escrowAbi,
+            functionName: "balanceOfToken",
+            args: [feeRouter, env.gpuAddress()],
+          }),
+        ]);
+        if (ethOwed === 0n && gpuOwed === 0n) {
+          return await buyLoop();
+        }
+      }
       const hash = await walletClient.writeContract({
         address: feeRouter,
         abi: feeRouterAbi,
@@ -99,6 +115,10 @@ async function runOnce(): Promise<void> {
     }
   }
 
+  await buyLoop();
+}
+
+async function buyLoop(): Promise<void> {
   if (env.quoteMode === "curve") {
     const graduated = await publicClient.readContract({
       address: env.curveAddress(),
