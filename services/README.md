@@ -17,11 +17,13 @@ the fact, and anyone can re-verify their tiers from the public seed.
 | `CHAIN_ID` | default `4663` (Robinhood Chain mainnet) |
 | `SIGNER_PORT` | default `8787` |
 
-`POST /permit {"to": "0x…", "qty": 1..8}` → `{seed, nonce, deadline, signature}`.
+`POST /permit {"to": "0x…", "qty": 1..50}` → `{seed, nonce, deadline, signature}`. No mint caps or cooldowns exist on-chain; the service only rate-limits enough to stay standing.
 
 ## Buyback keeper (`npm run keeper`)
 
 Every 12-hour window: pot ETH → open-market $GPU → `Rig.notifyRewardAmount`.
+Pons creator fees are **not** auto-claimed — they sit in the Pons escrow until ops
+manually calls `feeRouter.sweepAndHarvest()` (30% pot / 70% treasury).
 Implements the impact ceiling by probing the pool's marginal price and halving the
 buy until average execution is within `MAX_IMPACT_BPS`, so deep pots ladder across
 windows instead of donating slippage. The vault re-verifies output by balance delta

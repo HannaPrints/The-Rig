@@ -145,11 +145,12 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         escrow.credit{value: 10 ether}(address(feeRouter));
         escrow.creditGpu(address(feeRouter), 40_000e18);
 
-        feeRouter.harvest(); // anyone may poke
+        feeRouter.harvest(); // permissionless, but triggered manually by ops
 
-        assertEq(address(vault).balance, 8 ether); // 80% to the miners' pot
-        assertEq(treasury.balance, 2 ether); // 20% ops
-        assertEq(gpu.balanceOf(address(vault)), 40_000e18); // fee $GPU 100% to vault
+        assertEq(address(vault).balance, 3 ether); // 30% to the miners' pot
+        assertEq(treasury.balance, 7 ether); // 70% admin treasury
+        assertEq(gpu.balanceOf(address(vault)), 12_000e18); // fee $GPU splits 30/70 too
+        assertEq(gpu.balanceOf(treasury), 28_000e18);
         assertEq(address(feeRouter).balance, 0); // never holds a balance
         assertEq(feeRouter.totalEthRouted(), 10 ether);
         assertEq(feeRouter.totalGpuRouted(), 40_000e18);
@@ -160,17 +161,17 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         feeRouter.harvest();
 
         vault.flushGpu(); // permissionless
-        assertEq(gpu.balanceOf(address(rig)), 40_000e18);
+        assertEq(gpu.balanceOf(address(rig)), 12_000e18); // the miners' 30%
         assertEq(gpu.balanceOf(address(vault)), 0);
-        assertEq(rig.rewardRate(), 40_000e18 / rig.DURATION());
+        assertEq(rig.rewardRate(), 12_000e18 / rig.DURATION());
     }
 
     function test_SweepAndHarvestPullsCurveFees() public {
         // fees batched inside the curve, no buyback slice pending
         curve.setSweep{value: 5 ether}(escrow, address(feeRouter), false);
         feeRouter.sweepAndHarvest();
-        assertEq(address(vault).balance, 4 ether);
-        assertEq(treasury.balance, 1 ether);
+        assertEq(address(vault).balance, 1.5 ether);
+        assertEq(treasury.balance, 3.5 ether);
     }
 
     function test_SweepAndHarvestSurvivesOperatorGate() public {
@@ -179,8 +180,8 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         curve.setSweep{value: 5 ether}(escrow, address(feeRouter), true);
         escrow.credit{value: 2 ether}(address(feeRouter));
         feeRouter.sweepAndHarvest(); // must not revert
-        assertEq(address(vault).balance, 1.6 ether);
-        assertEq(treasury.balance, 0.4 ether);
+        assertEq(address(vault).balance, 0.6 ether);
+        assertEq(treasury.balance, 1.4 ether);
     }
 
     function test_HarvestEmptyEscrowIsNoop() public {
@@ -199,8 +200,8 @@ contract PonsIntegrationTest is Test, ISlotProvider {
         vm.prank(keeper);
         vault.buy(1 ether, 1_000_000e18);
         assertEq(gpu.balanceOf(address(rig)), 1_000_000e18);
-        assertEq(gpu.balanceOf(address(vault)), 40_000e18); // still waiting for flushGpu
+        assertEq(gpu.balanceOf(address(vault)), 12_000e18); // still waiting for flushGpu
         vault.flushGpu();
-        assertEq(gpu.balanceOf(address(rig)), 1_040_000e18);
+        assertEq(gpu.balanceOf(address(rig)), 1_012_000e18);
     }
 }

@@ -1,28 +1,42 @@
+import { links } from "../config";
+
 export function Footer() {
   return (
-    <footer className="mt-12 border-t border-grid">
-      <div className="mx-auto max-w-5xl space-y-4 px-4 py-10 text-center">
-        <div className="text-[11px] tracking-[0.3em] text-phosphor-dim">
-          PLUG IN · MINE · CLAIM
+    <footer className="border-t border-line">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="" className="h-6 w-6" />
+            <span className="text-sm font-bold tracking-tight">THE RIG</span>
+          </div>
+          <p className="mt-3 max-w-sm text-[12px] leading-5 text-muted">
+            The rig has no owner. The keeper can only buy. The code is public and unaudited until it
+            isn't. This is a game — not financial advice. Only spend what you are happy to lose.
+          </p>
         </div>
-        <div className="flex justify-center gap-6 text-xs">
-          <a href="https://github.com/HannaPrints/The-Rig" className="text-ink hover:text-phosphor">
-            github
-          </a>
-          <a
-            href="https://github.com/HannaPrints/The-Rig/blob/main/docs/DEEPDIVE.md"
-            className="text-ink hover:text-phosphor"
-          >
-            docs
-          </a>
-          <a href="https://robinhoodchain.blockscout.com" className="text-ink hover:text-phosphor">
-            explorer
-          </a>
+        <div className="flex gap-12">
+          <div className="space-y-2.5">
+            <div className="label text-ink">trade</div>
+            <a href={links.openSea} target="_blank" rel="noreferrer" className="label block hover:text-accent">
+              opensea ↗
+            </a>
+            <a href={links.explorer} target="_blank" rel="noreferrer" className="label block hover:text-accent">
+              explorer ↗
+            </a>
+          </div>
+          <div className="space-y-2.5">
+            <div className="label text-ink">build</div>
+            <a href={links.github} target="_blank" rel="noreferrer" className="label block hover:text-accent">
+              github ↗
+            </a>
+            <a href={links.docs} target="_blank" rel="noreferrer" className="label block hover:text-accent">
+              docs ↗
+            </a>
+          </div>
         </div>
-        <p className="mx-auto max-w-xl text-[11px] leading-5 text-phosphor-dim">
-          the rig has no owner. the keeper can only buy. the code is public and unaudited until it
-          isn't. this is a game — not financial advice. only spend what you are happy to lose.
-        </p>
+      </div>
+      <div className="border-t border-line py-4 text-center">
+        <span className="label">plug in · mine · claim</span>
       </div>
     </footer>
   );

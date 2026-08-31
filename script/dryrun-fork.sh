@@ -88,7 +88,7 @@ cast send $PRED_CURVE "buy(uint256,uint256,address)" 1000000000000000000 1 $TRAD
   --value 1ether --private-key $TRADER_PK --rpc-url $RPC >/dev/null
 pass "trader holds $(cast call $PRED_TOKEN 'balanceOf(address)(uint256)' $TRADER --rpc-url $RPC | awk '{print $1}') \$GPU"
 
-echo "── fee sweep: impersonate Pons's fee-sweep operator, then sweepAndHarvest"
+echo "── fee sweep: operator sweep, then MANUAL sweepAndHarvest (ops action, not keeper)"
 HOOK=$(cast call $PRED_CURVE "feePolicy()(address)" --rpc-url $RPC)
 OPERATOR=$(cast call $HOOK "feeSweepOperator()(address)" --rpc-url $RPC)
 cast rpc anvil_impersonateAccount $OPERATOR --rpc-url $RPC >/dev/null
@@ -100,7 +100,7 @@ OWED=$(cast call $FEE_ESCROW "balanceOf(address)(uint256)" $FEE_ROUTER --rpc-url
 cast send $FEE_ROUTER "sweepAndHarvest()" --private-key $KEEPER_PK --rpc-url $RPC --json > /tmp/harvest.json
 VB=$(cast balance $VAULT --rpc-url $RPC); TB=$(cast balance $TREASURY --rpc-url $RPC)
 TDELTA=$(py "$TB - $TB_BEFORE")
-[ "$(py "$VB * 2 == $TDELTA * 8")" = "True" ] && pass "harvested → vault $VB wei (80%), treasury +$TDELTA wei (20%) — exact split" || fail "80/20 split (vault $VB, treasury +$TDELTA)"
+[ "$(py "$VB * 7 == $TDELTA * 3")" = "True" ] && pass "harvested → vault $VB wei (30%), treasury +$TDELTA wei (70%) — exact split" || fail "30/70 split (vault $VB, treasury +$TDELTA)"
 
 echo "── keeper buyback: vault ETH → \$GPU on the curve → 12h stream"
 QUOTE=$(cast call $PRED_CURVE "buy(uint256,uint256,address)(uint256)" $VB 1 $VAULT --value $VB --from $VAULT --rpc-url $RPC | awk '{print $1}')

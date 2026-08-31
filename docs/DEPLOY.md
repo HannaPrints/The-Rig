@@ -103,15 +103,18 @@ redeploy it.
 ## How the money flows after launch
 
 ```
-$GPU trades on the curve (1% fee) ──► 70% creator share accrues in Pons escrow
-        keeper (or anyone) calls feeRouter.harvest()
-        ├── ETH: 80% → BuybackVault, 20% → treasury
-        └── fee-$GPU: 100% → BuybackVault (vault.flushGpu() streams it)
+$GPU trades on the curve (1% fee) ──► creator share accrues in the Pons escrow
+        ops manually calls feeRouter.sweepAndHarvest()   (never automated;
+        ├── ETH:     30% → BuybackVault, 70% → treasury   fees sit safely in
+        └── fee-$GPU: 30% → BuybackVault, 70% → treasury  escrow until then)
+in-game spend (mints/overclocks/fusions/racks/royalties): 70% → vault, 30% → treasury
 BuybackVault.buy() ──► PonsCurveAdapter ──► curve ──► $GPU ──► Rig 12h stream
 ```
 
-Buying through our own curve pays the 1% fee, 70% of which returns via the escrow —
-the recursive rebate from the deep dive, live.
+Two separate splits by design: in-game revenue keeps the original 70%-to-miners
+identity; the token's trading-fee creator share routes 30% to miners / 70% to the
+admin treasury. Buying through our own curve still pays the 1% fee, part of which
+returns via the escrow.
 
 ## Graduation switchover (at 4.2 ETH raised)
 
@@ -129,13 +132,15 @@ independent fork blocks, same addresses every time:
 - **launchToken on the real factory → token landed exactly on `0xf25E…F053`**, curve
   on `0xf16c…f5F1`, curve's fee recipient = the not-yet-deployed FeeRouter ✔
 - Deploy.s.sol nonces 1–11 → all 8 contracts on their planned addresses, pin check ✔
-- 1 ETH curve buy → **0.004165 ETH creator fee escrowed (41.65 bps of volume)** after
-  the buyback-and-lock slice (which buys $GPU off the curve and locks it — the
-  "buyback" is carved from the creator share, pre-graduation)
-- operator sweep (impersonated) → `sweepAndHarvest()` → **exact 80/20** vault/treasury ✔
-- keeper `vault.buy` on the real curve → rig streaming ~17.9 $GPU/sec ✔
+- 1 ETH curve buy → creator fee escrowed in ETH after the buyback-and-lock slice
+  (which buys $GPU off the curve and locks it — carved from the creator share,
+  pre-graduation)
+- operator sweep (impersonated) → manual `sweepAndHarvest()` → **exact 30/70**
+  vault/treasury for both ETH and fee-$GPU ✔
+- keeper `vault.buy` on the real curve → rig streaming ✔
 - $5 mint with a real EIP-712 permit (0.00125 ETH at $4,000 feed), 12,500 $GPU burn
-  gate, card staked, 12h warp, **775,094 $GPU earned and claimed** ✔
+  gate — no cooldown, no hourly cap — card staked, 12h warp, **1.8M $GPU earned and
+  claimed** ✔
 
 Two findings the dry run surfaced (both fixed):
 

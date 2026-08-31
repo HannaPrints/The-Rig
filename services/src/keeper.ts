@@ -22,7 +22,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { env, robinhoodChain } from "./config.js";
-import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi } from "./abi.js";
+import { vaultAbi, quoterAbi, curveAbi } from "./abi.js";
 
 const account = privateKeyToAccount(env.keeperPk());
 const publicClient = createPublicClient({ chain: robinhoodChain, transport: http(env.rpcUrl) });
@@ -81,22 +81,8 @@ async function sizeChunk(budget: bigint): Promise<{ amountIn: bigint; quotedOut:
 }
 
 async function runOnce(): Promise<void> {
-  // Route accrued Pons creator fees into the pot before buying: harvest() pulls
-  // from the Pons fee escrow and splits 80% vault / 20% treasury (permissionless).
-  const feeRouter = env.feeRouterAddress();
-  if (feeRouter) {
-    try {
-      const hash = await walletClient.writeContract({
-        address: feeRouter,
-        abi: feeRouterAbi,
-        functionName: "sweepAndHarvest",
-      });
-      await publicClient.waitForTransactionReceipt({ hash });
-      console.log(`[keeper] harvested Pons fees in tx ${hash}`);
-    } catch (err) {
-      console.error("[keeper] harvest failed (continuing to buy):", err);
-    }
-  }
+  // Pons creator fees are NOT auto-claimed: they sit safely in the Pons escrow
+  // until ops manually calls feeRouter.sweepAndHarvest() (30% pot / 70% treasury).
 
   if (env.quoteMode === "curve") {
     const graduated = await publicClient.readContract({

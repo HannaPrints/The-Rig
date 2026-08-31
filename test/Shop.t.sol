@@ -129,7 +129,6 @@ contract ShopTest is Test {
 
     function test_NonceBurnsOnUse() public {
         _mintAs(user, 1, keccak256("seed-4"), 4);
-        skip(31); // clear wallet cooldown; nonce must still be dead
         uint256 deadline = block.timestamp + 5 minutes;
         bytes memory sig = _sign(user, 1, keccak256("seed-4"), 4, deadline);
         uint256 cost = shop.mintPriceWei(1);
@@ -138,48 +137,11 @@ contract ShopTest is Test {
         shop.mint{value: cost}(1, keccak256("seed-4"), 4, deadline, sig);
     }
 
-    function test_WalletCooldown() public {
-        _mintAs(user, 1, keccak256("seed-5"), 5);
-        uint256 deadline = block.timestamp + 5 minutes;
-        bytes memory sig = _sign(user, 1, keccak256("seed-6"), 6, deadline);
-        uint256 cost = shop.mintPriceWei(1);
-        vm.expectRevert(Shop.WalletCooldown.selector);
-        vm.prank(user, user);
-        shop.mint{value: cost}(1, keccak256("seed-6"), 6, deadline, sig);
-
-        skip(31);
-        _mintAs(user, 1, keccak256("seed-6"), 7); // fine after cooldown
-    }
-
     function test_ContractsCannotMint() public {
         uint256 deadline = block.timestamp + 5 minutes;
         bytes memory sig = _sign(address(this), 1, bytes32(0), 8, deadline);
         vm.expectRevert(Shop.NotEOA.selector);
         shop.mint{value: 1 ether}(1, bytes32(0), 8, deadline, sig);
-    }
-
-    function test_HourlyThrottle() public {
-        // 400/hour on-chain: 50 wallets × 8 fills the bucket, the 401st mint reverts
-        vm.warp((block.timestamp / 1 hours) * 1 hours); // align to a fresh bucket
-        for (uint256 i = 0; i < 50; i++) {
-            address w = makeAddr(string.concat("w", vm.toString(i)));
-            vm.deal(w, 1 ether);
-            gpu.mint(w, 200_000e18);
-            vm.prank(w);
-            gpu.approve(address(shop), type(uint256).max);
-            _mintAs(w, 8, keccak256(abi.encode(i)), 100 + i);
-        }
-        assertEq(shop.madeCount(), 400);
-
-        uint256 deadline = block.timestamp + 5 minutes;
-        bytes memory sig = _sign(user, 1, keccak256("late"), 999, deadline);
-        uint256 cost = shop.mintPriceWei(1);
-        vm.expectRevert(Shop.HourlyThrottle.selector);
-        vm.prank(user, user);
-        shop.mint{value: cost}(1, keccak256("late"), 999, deadline, sig);
-
-        skip(1 hours); // next bucket opens
-        _mintAs(user, 1, keccak256("late-2"), 1000);
     }
 
     function test_OverclockRaisesHashrateAndCharges() public {

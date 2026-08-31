@@ -11,12 +11,12 @@ function fmt(v: bigint | undefined, decimals = 0): string {
 
 function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
-    <div className="panel p-4">
-      <div className="glow text-2xl text-phosphor">
+    <div className="px-6 py-7 first:pl-0 last:pr-0">
+      <div className="num text-[26px] leading-none text-ink">
         {value}
-        {unit && <span className="ml-1 text-sm text-phosphor-dim">{unit}</span>}
+        {unit && <span className="ml-1.5 text-sm text-muted">{unit}</span>}
       </div>
-      <div className="mt-1 text-[11px] tracking-widest text-ink">{label}</div>
+      <div className="label mt-2.5">{label}</div>
     </div>
   );
 }
@@ -30,20 +30,18 @@ export function Network() {
   const { data: streamed } = useReadContract({ address: addresses.rig, abi: rigAbi, functionName: "totalStreamed", ...q });
 
   return (
-    <section id="network" className="py-12">
-      <h2 className="panel-title mb-6 text-sm">▚ NETWORK</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <Stat label="CARDS MADE" value={fmt(made)} />
-        <Stat label="CARDS LIVING" value={fmt(living)} />
-        <Stat label="NETWORK POWER" value={fmt(weight)} unit="MH/s" />
-        <Stat label="$GPU STREAMED" value={fmt(streamed, 18)} />
-        <Stat label="$GPU PAID OUT" value={fmt(paid, 18)} />
+    <section id="network" className="mx-auto max-w-6xl px-5 py-16">
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="text-xl font-bold tracking-tight">Network</h2>
+        {!deployed && <span className="label">pre-launch — every counter reads zero</span>}
       </div>
-      {!deployed && (
-        <p className="mt-4 text-xs text-phosphor-dim">
-          nothing minted yet — the shop opens when the contracts go live on Robinhood Chain.
-        </p>
-      )}
+      <div className="grid grid-cols-2 divide-line border-y border-line sm:grid-cols-3 sm:divide-x lg:grid-cols-5">
+        <Stat label="cards made" value={fmt(made)} />
+        <Stat label="cards living" value={fmt(living)} />
+        <Stat label="network power" value={fmt(weight)} unit="MH/s" />
+        <Stat label="$GPU streamed" value={fmt(streamed, 18)} />
+        <Stat label="$GPU paid out" value={fmt(paid, 18)} />
+      </div>
     </section>
   );
 }

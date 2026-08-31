@@ -84,28 +84,27 @@ export function MintPanel() {
 
   return (
     <div className="panel p-6">
-      <h2 className="panel-title text-sm">▚ SHOP</h2>
+      <div className="label mb-6 text-ink">shop</div>
 
       {!deployed ? (
-        <div className="mt-6 space-y-3">
-          <div className="glow-amber text-lg text-amber">SHOP OPENS SOON</div>
-          <p className="text-xs leading-6 text-ink">
-            10,000 cards at $5. 400 mints per hour, on-chain — a sellout takes 25+ hours by
-            construction, so nobody needs to be first in line. 70% of every mint goes straight
-            to the miners' pot.
+        <div className="space-y-3">
+          <div className="text-lg font-semibold text-amber">Opens with mainnet</div>
+          <p className="text-[13px] leading-6 text-muted">
+            10,000 cards at $5. No cooldowns and no hourly caps — mint as many as you want, whenever
+            you want. 70% of every mint goes straight to the miners' pot.
           </p>
         </div>
       ) : (
-        <div className="mt-6 space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center gap-2">
-            {[1, 2, 4, 8].map((n) => (
+            {[1, 5, 10, 25, 50].map((n) => (
               <button
                 key={n}
                 onClick={() => setQty(n)}
-                className={`border px-3 py-1.5 text-xs ${
+                className={`num px-3 py-1.5 text-xs transition-colors ${
                   qty === n
-                    ? "border-phosphor bg-phosphor text-void"
-                    : "border-phosphor-dim text-phosphor hover:border-phosphor"
+                    ? "bg-accent text-void"
+                    : "border border-line text-ink hover:border-accent-dim hover:text-accent"
                 }`}
               >
                 ×{n}
@@ -113,40 +112,35 @@ export function MintPanel() {
             ))}
           </div>
 
-          <div className="space-y-1 text-xs text-ink">
-            <div>
-              price: <span className="text-phosphor">{price !== undefined ? `${formatEther(price)} ETH` : "…"}</span>{" "}
-              <span className="text-phosphor-dim">(${qty * 5})</span>
+          <div className="space-y-1.5 text-[13px]">
+            <div className="flex justify-between">
+              <span className="text-muted">price</span>
+              <span className="num text-ink">
+                {price !== undefined ? `${formatEther(price)} ETH` : "…"}{" "}
+                <span className="text-muted">(${qty * 5})</span>
+              </span>
             </div>
-            <div>
-              burn gate:{" "}
-              <span className="text-amber">
+            <div className="flex justify-between">
+              <span className="text-muted">burn gate</span>
+              <span className="num text-amber">
                 {burnPerMint !== undefined ? `${formatEther(burnNeeded)} $GPU → 0x…dEaD` : "…"}
               </span>
             </div>
           </div>
 
           {!isConnected ? (
-            <p className="text-xs text-phosphor-dim">connect a wallet to mint</p>
+            <p className="label">connect a wallet to mint</p>
           ) : needsApproval ? (
-            <button
-              onClick={approve}
-              disabled={busy}
-              className="w-full border-2 border-amber py-3 text-xs font-bold tracking-widest text-amber hover:bg-amber hover:text-void disabled:opacity-40"
-            >
+            <button onClick={approve} disabled={busy} className="btn-ghost w-full text-amber">
               {busy ? "…" : "APPROVE $GPU BURN"}
             </button>
           ) : (
-            <button
-              onClick={mint}
-              disabled={busy}
-              className="glow w-full border-2 border-phosphor py-3 text-xs font-bold tracking-widest text-phosphor hover:bg-phosphor hover:text-void disabled:opacity-40"
-            >
+            <button onClick={mint} disabled={busy} className="btn-primary w-full">
               {busy ? "…" : `MINT ×${qty}`}
             </button>
           )}
 
-          {status && <p className="text-xs text-phosphor-dim">{status}</p>}
+          {status && <p className="label normal-case tracking-normal">{status}</p>}
         </div>
       )}
     </div>

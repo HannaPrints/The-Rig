@@ -7,18 +7,18 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IPonsFeeEscrow, IPonsBondingCurve} from "./interfaces/External.sol";
 
 /// @title PonsFeeRouter — where the Pons creator fees land
-/// @notice Set as the launch's creatorFeeRecipient, so 70% of every $GPU trade fee
-///         accrues to this contract in the Pons fee escrow. No owner. Anyone may
-///         call harvest(): ETH splits 80% to the BuybackVault (the miners' pot) and
-///         20% to the project treasury; any $GPU fees go 100% to the vault, where a
-///         permissionless flushGpu() streams them straight to miners.
-/// @dev    Immutable addresses, hardcoded split, permissionless poke — same trust
-///         shape as the RoyaltyRouter. The keeper calls harvest() before each buy,
-///         but nothing breaks if anyone else calls it first.
+/// @notice Set as the launch's creatorFeeRecipient, so the creator share of every
+///         $GPU trade fee accrues to this contract in the Pons fee escrow. No owner.
+///         Harvesting is a manual ops action (never automated), but the function is
+///         permissionless since funds can only ever move to the two fixed
+///         destinations: 30% to the BuybackVault (the miners' pot) and 70% to the
+///         admin treasury, for both ETH and $GPU fees.
+/// @dev    Immutable addresses, hardcoded split — same trust shape as the
+///         RoyaltyRouter. Fees sit safely in the Pons escrow until harvested.
 contract PonsFeeRouter is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    uint16 public constant VAULT_SHARE_BPS = 8000;
+    uint16 public constant VAULT_SHARE_BPS = 3000;
 
     IPonsFeeEscrow public immutable escrow;
     IERC20 public immutable gpu;
@@ -78,8 +78,9 @@ contract PonsFeeRouter is ReentrancyGuard {
 
         uint256 gpuBal = gpu.balanceOf(address(this));
         if (gpuBal > 0) {
-            // fee $GPU is already the reward asset — straight to the miners' pot
-            gpu.safeTransfer(vault, gpuBal);
+            uint256 gpuToVault = (gpuBal * VAULT_SHARE_BPS) / 10_000;
+            gpu.safeTransfer(vault, gpuToVault);
+            gpu.safeTransfer(treasury, gpuBal - gpuToVault);
             totalGpuRouted += gpuBal;
         }
 

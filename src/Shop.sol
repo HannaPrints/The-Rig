@@ -33,7 +33,9 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
     // ----------------------------------------------------------------- economy
     uint256 public constant MINT_USD = 5e8; // $5, 8 decimals (Chainlink convention)
     uint256 public constant MAX_SUPPLY = 10_000; // shop mints; fusion output doesn't count
-    uint256 public constant MAX_PER_TX = 8;
+    // Purely a gas bound on the mint loop — NOT a rate limit. Mint as much and as
+    // often as you want; there is no cooldown and no hourly throttle.
+    uint256 public constant MAX_PER_TX = 50;
     uint16 public constant SPLIT_BPS = 7000; // 70% to the miners' pot, always
 
     // burn gate: $GPU torched from the minter inside the mint tx.
@@ -44,10 +46,6 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
 
     // hold gate for overclock (hold, not spend)
     uint256 public constant HOLD_GATE = 25_000e18;
-
-    // anti-bot: a 10,000 sellout takes ≥25 hours by construction
-    uint256 public constant MINTS_PER_HOUR = 400;
-    uint256 public constant WALLET_COOLDOWN = 30 seconds;
 
     // racks: room starts at 4 slots, each rack adds 4, max 12 racks = 52 slots
     uint256 public constant BASE_SLOTS = 4;
@@ -76,8 +74,6 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
 
     // ------------------------------------------------------------------- state
     uint256 public madeCount; // counts against MAX_SUPPLY; living count is on the card
-    mapping(uint256 => uint256) public mintsInHour; // hour bucket => count
-    mapping(address => uint256) public lastMintAt;
     mapping(uint256 => bool) public nonceUsed;
     mapping(address => uint256) public racksOf;
 
@@ -91,8 +87,6 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
     error NotEOA();
     error BadQty();
     error SoldOut();
-    error HourlyThrottle();
-    error WalletCooldown();
     error PermitExpired();
     error PermitUsed();
     error BadSignature();
@@ -164,13 +158,12 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
         payable
         nonReentrant
     {
-        // anti-bot layer 1: mint() refuses contracts
+        // mint() refuses contracts: keeps tier-sniping revert bots out
         if (msg.sender != tx.origin || msg.sender.code.length != 0) revert NotEOA();
         if (qty == 0 || qty > MAX_PER_TX) revert BadQty();
         if (madeCount + qty > MAX_SUPPLY) revert SoldOut();
 
-        _checkThrottle(qty); // anti-bot layer 3
-        _verifyPermit(qty, seed, nonce, deadline, sig); // anti-bot layer 2
+        _verifyPermit(qty, seed, nonce, deadline, sig); // bot gate + committed randomness
         madeCount += qty;
 
         // burn gate: $GPU torched from the minter's balance inside the mint
@@ -186,15 +179,6 @@ contract Shop is Ownable, EIP712, ReentrancyGuard {
             uint256 serial = card.mintCard(msg.sender, tier);
             emit Minted(msg.sender, serial, tier, perCard, burnPerMint);
         }
-    }
-
-    /// @dev global throttle + wallet cooldown
-    function _checkThrottle(uint256 qty) internal {
-        uint256 bucket = block.timestamp / 1 hours;
-        if (mintsInHour[bucket] + qty > MINTS_PER_HOUR) revert HourlyThrottle();
-        if (block.timestamp < lastMintAt[msg.sender] + WALLET_COOLDOWN) revert WalletCooldown();
-        mintsInHour[bucket] += qty;
-        lastMintAt[msg.sender] = block.timestamp;
     }
 
     /// @dev site-signed permit, short deadline, nonce burned on use.

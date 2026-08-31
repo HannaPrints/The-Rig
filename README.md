@@ -11,6 +11,8 @@
 
 <h3 align="center">A mining game on Robinhood Chain.<br/>Mint a graphics card for $5, slot it into your rig, and it earns $GPU for as long as it's plugged in.</h3>
 
+<p align="center"><a href="https://opensea.io/assets/robinhood/0xa35ec0e14fb2b325cca9eb0caf3e9cbdb1a8acb6"><b>Collection on OpenSea ↗</b></a> — OpenSea indexes Robinhood Chain natively; the link resolves at deploy.</p>
+
 <p align="center"><b>$GPU is never minted. Only bought.</b><br/><sub>Building fully in public — every contract, every decision, every number, right here.</sub></p>
 
 ---
@@ -34,7 +36,7 @@ burn $GPU → mint → slot in → mine $GPU → claim → spend into upgrades �
 | Forged | ??? | 2,500 | fusion only |
 
 - **One stream, every second, pro-rata by hashrate.** Rewards drip over rolling 12-hour windows and the stream pauses when the rig is empty — time never steals from miners.
-- **The money loop:** 70% of every mint, overclock, fusion, rack, royalty — *and 70% of $GPU's own trading fees on [Pons](https://pons.fun)* — buys $GPU on the open market and streams it straight to miners. Volume is yield.
+- **The money loop:** 70% of every mint, overclock, fusion, rack, and royalty buys $GPU on the open market and streams it straight to miners — plus 30% of the creator share of $GPU's own trading fees on [Pons](https://pons.fun) (the other 70% funds the project treasury).
 - **The burn:** every mint torches 12,500 $GPU from your wallet. Full mint = 125,000,000 burned — 12.5% of everything that will ever exist.
 - **Climb:** overclock (+20%/level, max +100%), fuse two identical cards into the next tier (supply only shrinks), expand your room from 4 to 52 slots.
 
@@ -48,16 +50,16 @@ burn $GPU → mint → slot in → mine $GPU → claim → spend into upgrades �
 | Shop owner | rotate permit signer, tune burn dial | dial is band-limited at deploy; can't touch cards or the 70% |
 | Mint randomness | committed in the signed permit | reproducible by anyone, riggable by no one |
 
-Anti-bot by construction: contracts can't mint, permits expire in 5 minutes, 400 mints/hour on-chain, 30s wallet cooldown. **A sellout takes 25+ hours, mathematically.**
+Anti-bot by construction: contracts can't mint and permits expire in 5 minutes. **No mint caps, no cooldowns — mint as many as you want, whenever you want.**
 
 ## The monorepo
 
 ```
 src/        Solidity — RigCard · Shop · Rig · BuybackVault · RoyaltyRouter · Workshop · adapters
-test/       29 Foundry tests
+test/       34 Foundry tests
 script/     deployment
 services/   permit signer (the bot gate + committed randomness) · buyback keeper
-web/        the site — Vite + React + wagmi, CRT phosphor terminal
+web/        the site — Vite + React + wagmi
 docs/       the full protocol deep dive & economic model
 ```
 

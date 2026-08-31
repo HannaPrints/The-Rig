@@ -32,6 +32,7 @@ export const rigAbi = [
     outputs: [{ type: "uint256" }],
   },
   { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  { type: "function", name: "rewardRate", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalPaidOut", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalStreamed", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },

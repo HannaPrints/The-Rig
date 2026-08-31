@@ -32,35 +32,35 @@ export function MyRig() {
 
   return (
     <div className="panel p-6">
-      <h2 className="panel-title text-sm">▚ MY RIG</h2>
+      <div className="label mb-6 text-ink">my rig</div>
 
       {!deployed ? (
-        <p className="mt-6 text-xs leading-6 text-ink">
-          your rig lives here: staked cards, live hashrate, and a claim button that pays out a
-          stream accruing <span className="text-phosphor">every second</span>. earnings float with
-          the buyback pot — the rig never owes anyone a fixed return, which is exactly why it can
-          never go under.
+        <p className="text-[13px] leading-6 text-muted">
+          Your rig lives here: staked cards, live hashrate, and a claim button paying out a stream
+          that accrues <span className="text-ink">every second</span>. Earnings float with the
+          buyback pot — the rig never owes anyone a fixed return, which is exactly why it can never
+          go under.
         </p>
       ) : !isConnected ? (
-        <p className="mt-6 text-xs text-phosphor-dim">connect a wallet to see your rig</p>
+        <p className="label">connect a wallet to see your rig</p>
       ) : (
-        <div className="mt-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="glow text-2xl text-phosphor">{(weight ?? 0n).toString()}</div>
-              <div className="text-[11px] tracking-widest text-ink">MH/s PLUGGED IN</div>
+              <div className="num text-2xl text-ink">{(weight ?? 0n).toLocaleString()}</div>
+              <div className="label mt-1.5">mh/s plugged in</div>
             </div>
             <div>
-              <div className="glow text-2xl text-phosphor">
+              <div className="num text-2xl text-accent">
                 {Number(formatUnits(earned ?? 0n, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 })}
               </div>
-              <div className="text-[11px] tracking-widest text-ink">$GPU CLAIMABLE</div>
+              <div className="label mt-1.5">$gpu claimable</div>
             </div>
           </div>
           <button
             onClick={claim}
             disabled={isPending || confirming || (earned ?? 0n) === 0n}
-            className="glow w-full border-2 border-phosphor py-3 text-xs font-bold tracking-widest text-phosphor hover:bg-phosphor hover:text-void disabled:opacity-40"
+            className="btn-primary w-full"
           >
             {isPending || confirming ? "…" : "CLAIM"}
           </button>

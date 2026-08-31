@@ -21,8 +21,8 @@ import { env, robinhoodChain } from "./config.js";
 const account = privateKeyToAccount(env.signerPk());
 const shop = env.shopAddress();
 
-const MAX_PER_TX = 8;
-const COOLDOWN_MS = 30_000; // mirror the on-chain wallet cooldown
+const MAX_PER_TX = 50; // matches the Shop's gas bound — NOT a rate limit
+const COOLDOWN_MS = 2_000; // light anti-spam only; the protocol has no mint caps
 
 const lastIssued = new Map<string, number>();
 
