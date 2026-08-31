@@ -1,6 +1,6 @@
 # Launch thread template — X
 
-Fill every `[BRACKET]` before posting. Each tweet is under 280 characters.
+Fill `[PONS_LINK]` (the pons.fun token page for 0x3Da2…802E) before posting; everything else is final. Each tweet is under 280 characters.
 Suggested cadence: post the thread the moment the mint opens, pin tweet 1, then
 quote-tweet it with live stats every few hours ("X,XXX cards made · rig streaming").
 
@@ -41,7 +41,7 @@ $GPU: 1,000,000,000 fixed supply, launched on Pons, tradeable from block one.
 
 The game contracts cannot mint a single token. Every $GPU a miner has ever earned was bought with ETH that other players actually spent.
 
-CA: [TOKEN_CA]
+CA: 0x3Da22F970a0a048d3830fDE22b94017B83a3802E
 
 **5 — the burn**
 
@@ -77,7 +77,7 @@ No. Read the code:
 
 Staked cards are untouchable by anyone but you.
 
-[GITHUB_LINK]
+https://github.com/HannaPrints/The-Rig
 
 **9 — fair rolls**
 
@@ -94,7 +94,7 @@ Mint 1 or mint 500 — first come, first served until 10,000 are gone. 70% of ev
 **11 — the full money map**
 
 ▸ Mints & upgrades: 70% miners / 30% treasury
-▸ $GPU trading fees: 30% miners / 70% treasury
+▸ $GPU trades (4% fee): 30% of our share to miners / 70% treasury
 ▸ 5% royalty on @opensea sales: 70% of it back to miners
 ▸ Burn gate: 12,500 $GPU per mint, destroyed
 
@@ -104,14 +104,14 @@ All on-chain. Most of it hardcoded in ownerless contracts.
 
 We didn't just deploy and pray. The entire launch was rehearsed on a fork of mainnet against the real live contracts — the token landed on its predicted address to the byte, three separate times.
 
-Every test, every address, every number: [GITHUB_LINK]
+Every test, every address, every number: https://github.com/HannaPrints/The-Rig
 
 **13 — plug in**
 
-⛏️ Mint: [SITE_LINK]
+⛏️ Mint: https://www.therig.sh
 📈 $GPU: [PONS_LINK]
-🖼️ Collection: [OPENSEA_LINK]
-📖 Docs: [DOCS_LINK]
+🖼️ Collection: https://opensea.io/assets/robinhood/0xa35ec0e14fb2b325cca9eb0caf3e9cbdb1a8acb6
+📖 Docs: https://github.com/HannaPrints/The-Rig/blob/main/docs/DEEPDIVE.md
 
 10,000 cards. $5. The stream is waiting.
 

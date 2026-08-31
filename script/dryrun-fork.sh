@@ -52,10 +52,10 @@ echo "  forked block $(cast block-number --rpc-url $RPC), chain $(cast chain-id 
 for a in $DEPLOYER $OPS $KEEPER $TRADER; do cast rpc anvil_setBalance $a 0x8AC7230489E80000 --rpc-url $RPC >/dev/null; done
 [ "$(cast nonce $DEPLOYER --rpc-url $RPC)" = "0" ] || fail "deployer nonce must be 0"
 
-echo "── nonce 0: launch \$GPU on the real Pons V2 factory"
+echo "── nonce 0: launch \$GPU on the real Pons V2 factory (frozen metadata from .env)"
 cast send $FACTORY \
   "launchToken((string,string,string,string,(string,string,string,string,string),address,uint16,bool,bytes32,bytes32),uint256,address)" \
-  "(\"GPU\",\"GPU\",\"\",\"\",(\"\",\"\",\"\",\"\",\"\"),$PRED_FEE_ROUTER,0,true,$ECONOMICS,0x0000000000000000000000000000000000000000000000000000000000000000)" \
+  "(\"$TOKEN_NAME\",\"$TOKEN_SYMBOL\",\"$TOKEN_LOGO\",\"$TOKEN_DESCRIPTION\",(\"$SOCIAL_TWITTER\",\"\",\"\",\"$SOCIAL_WEBSITE\",\"\"),$PRED_FEE_ROUTER,$CREATOR_TAX_BPS,true,$ECONOMICS,0x0000000000000000000000000000000000000000000000000000000000000000)" \
   0 0x0000000000000000000000000000000000000000 \
   --value 500000000000000 --private-key $PRIVATE_KEY --rpc-url $RPC >/dev/null
 assert_eq "$(cast call $PRED_TOKEN 'symbol()(string)' --rpc-url $RPC | tr -d '"')" "GPU" "token CA matches prediction: $PRED_TOKEN"

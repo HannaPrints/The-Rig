@@ -25,6 +25,8 @@ export const links = {
   github: "https://github.com/HannaPrints/The-Rig",
   docs: "https://github.com/HannaPrints/The-Rig/blob/main/docs/DEEPDIVE.md",
   explorer: "https://robinhoodchain.blockscout.com",
+  x: "https://x.com/TheRigRH",
+  site: "https://www.therig.sh",
 };
 
 export const TIERS = [

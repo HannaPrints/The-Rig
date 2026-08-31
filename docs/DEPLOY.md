@@ -11,8 +11,8 @@ wallet** — nobody can front-run or squat these. Predicted by simulating the re
 
 | What | Address | How it's fixed |
 |---|---|---|
-| **$GPU token** | `0xf25EC3284De67E1A584E91Ae2B6a9436671cF053` | CREATE2 (factory) |
-| **Bonding curve** | `0xf16cE575C523Bf0cE60B061d264664d1d3aFf5F1` | CREATE2 (factory) |
+| **$GPU token** | `0x3Da22F970a0a048d3830fDE22b94017B83a3802E` | CREATE2 (factory) |
+| **Bonding curve** | `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` | CREATE2 (factory) |
 | PonsCurveAdapter | `0x98739E2bF978A856c681b98f0A8415E091eA5CF2` | our nonce 1 |
 | BuybackVault | `0xcA1654Fa5815Db81674655830d4356D0A212c221` | our nonce 2 |
 | **PonsFeeRouter** | `0x1C92372E0f2D0eD1CF716632734f041C57f60a8F` | our nonce 3 — **pinned as creatorFeeRecipient at launch, before it exists** |
@@ -26,8 +26,13 @@ wallet** — nobody can front-run or squat these. Predicted by simulating the re
 
 Byte-identical inputs or a different address. Recompute (`script/predict-pons-ca.sh`) if ANY of these change:
 
-- token metadata: name (`GPU`), symbol (`GPU`), logo, description, all five socials — **currently predicted with empty logo/description/socials; freeze final metadata, then recompute and update this table**
-- `creatorFeeRecipient` (pinned: the FeeRouter above), `creatorTaxBps` (0), `buybackEnabled` (true), `salt` (0x0), launch config id (0), pair token (native ETH)
+- token metadata — **FROZEN 2026-08-31**, stored in `.env`: name `GPU`, symbol `GPU`,
+  logo `https://www.therig.sh/logo.svg`, the one-line description, twitter
+  `https://x.com/TheRigRH`, website `https://www.therig.sh` (telegram/discord/farcaster
+  empty). One changed character = different CA.
+- `creatorFeeRecipient` (pinned: the FeeRouter above), `creatorTaxBps` (**300 — +3%
+  creator tax on the 1% pool fee = 4% total per trade, tax leg 100% to our FeeRouter**),
+  `buybackEnabled` (true), `salt` (0x0), launch config id (0), pair token (native ETH)
 - the sending wallet, or any nonce spent from it before the planned sequence
 - Pons-owner economics. Pin them: pass `expectedEconomics` (currently
   `0xa9fc75d4203a33fe660e8fa32c74c3aa41c1fda4bf23d3a39b6bc22a1f8b1ca7` from
@@ -76,9 +81,12 @@ TOKEN_DESCRIPTION="…final copy…" SOCIAL_WEBSITE="…" \
 **1. Launch $GPU on Pons (deployer nonce 0).** Exact value, exact params from step 0:
 
 ```bash
+source .env
+ECONOMICS=$(cast call $PONS_V2_FACTORY "previewLaunchEconomics(uint256,address)(bytes32)" 0 0x0000000000000000000000000000000000000000 --rpc-url $RPC_URL)
+# must equal 0xa9fc75d4203a33fe660e8fa32c74c3aa41c1fda4bf23d3a39b6bc22a1f8b1ca7 — if not, STOP and re-predict
 cast send $PONS_V2_FACTORY \
   "launchToken((string,string,string,string,(string,string,string,string,string),address,uint16,bool,bytes32,bytes32),uint256,address)" \
-  "(\"GPU\",\"GPU\",\"<logo>\",\"<description>\",(\"<tw>\",\"<tg>\",\"<dc>\",\"<web>\",\"<fc>\"),$EXPECTED_FEE_ROUTER,0,true,<economics-pin>,0x0000000000000000000000000000000000000000000000000000000000000000)" \
+  "(\"$TOKEN_NAME\",\"$TOKEN_SYMBOL\",\"$TOKEN_LOGO\",\"$TOKEN_DESCRIPTION\",(\"$SOCIAL_TWITTER\",\"\",\"\",\"$SOCIAL_WEBSITE\",\"\"),$EXPECTED_FEE_ROUTER,$CREATOR_TAX_BPS,true,$ECONOMICS,0x0000000000000000000000000000000000000000000000000000000000000000)" \
   0 0x0000000000000000000000000000000000000000 \
   --value 0.0005ether --private-key $PRIVATE_KEY --rpc-url $RPC_URL
 ```

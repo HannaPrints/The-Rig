@@ -11,7 +11,12 @@
 
 <h3 align="center">A mining game on Robinhood Chain.<br/>Mint a graphics card for $5, slot it into your rig, and it earns $GPU for as long as it's plugged in.</h3>
 
-<p align="center"><a href="https://opensea.io/assets/robinhood/0xa35ec0e14fb2b325cca9eb0caf3e9cbdb1a8acb6"><b>Collection on OpenSea ↗</b></a> — OpenSea indexes Robinhood Chain natively; the link resolves at deploy.</p>
+<p align="center">
+  <a href="https://www.therig.sh"><b>therig.sh</b></a> ·
+  <a href="https://x.com/TheRigRH"><b>@TheRigRH</b></a> ·
+  <a href="https://opensea.io/assets/robinhood/0xa35ec0e14fb2b325cca9eb0caf3e9cbdb1a8acb6"><b>OpenSea ↗</b></a>
+  <br/><sub>OpenSea indexes Robinhood Chain natively; the collection link resolves at deploy.</sub>
+</p>
 
 <p align="center"><b>$GPU is never minted. Only bought.</b><br/><sub>Building fully in public — every contract, every decision, every number, right here.</sub></p>
 
@@ -36,7 +41,7 @@ burn $GPU → mint → slot in → mine $GPU → claim → spend into upgrades �
 | Forged | ??? | 2,500 | fusion only |
 
 - **One stream, every second, pro-rata by hashrate.** Rewards drip over rolling 12-hour windows and the stream pauses when the rig is empty — time never steals from miners.
-- **The money loop:** 70% of every mint, overclock, fusion, rack, and royalty buys $GPU on the open market and streams it straight to miners — plus 30% of the creator share of $GPU's own trading fees on [Pons](https://pons.fun) (the other 70% funds the project treasury).
+- **The money loop:** 70% of every mint, overclock, fusion, rack, and royalty buys $GPU on the open market and streams it straight to miners — plus 30% of our share of $GPU's trading fees on [Pons](https://pons.fun) (**4% per trade**: 1% pool fee + 3% creator tax; the other 70% funds the project treasury).
 - **The burn:** every mint torches 12,500 $GPU from your wallet. Full mint = 125,000,000 burned — 12.5% of everything that will ever exist.
 - **Climb:** overclock (+20%/level, max +100%), fuse two identical cards into the next tier (supply only shrinks), expand your room from 4 to 52 slots.
 - **Secondary sales:** 5% royalty (ERC-2981) on OpenSea and every honoring marketplace, paid to the ownerless RoyaltyRouter — 70% of it streams back to the miners' pot.

@@ -1,7 +1,7 @@
 const FLOWS = [
   { source: "Card mints ($5 each)", miners: "70%", treasury: "30%", note: "buys $GPU on the open market" },
   { source: "Overclocks · fusions · racks", miners: "70%", treasury: "30%", note: "same split, every fee" },
-  { source: "$GPU trading fees (creator share)", miners: "30%", treasury: "70%", note: "harvested from escrow" },
+  { source: "$GPU trading fees (4% per trade, our share)", miners: "30%", treasury: "70%", note: "harvested from escrow" },
   { source: "Secondary royalties (5% of sales)", miners: "70%", treasury: "30%", note: "ownerless router, hardcoded" },
   { source: "Burn gate (12,500 $GPU per mint)", miners: "—", treasury: "—", note: "burned forever, benefits every holder" },
 ];

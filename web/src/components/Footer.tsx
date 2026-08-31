@@ -25,6 +25,12 @@ export function Footer() {
             </a>
           </div>
           <div className="space-y-2.5">
+            <div className="label text-ink">follow</div>
+            <a href={links.x} target="_blank" rel="noreferrer" className="label block hover:text-accent">
+              x / twitter ↗
+            </a>
+          </div>
+          <div className="space-y-2.5">
             <div className="label text-ink">build</div>
             <a href={links.github} target="_blank" rel="noreferrer" className="label block hover:text-accent">
               github ↗
