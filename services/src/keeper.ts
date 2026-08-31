@@ -22,21 +22,33 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { env, robinhoodChain } from "./config.js";
-import { vaultAbi, quoterAbi } from "./abi.js";
+import { vaultAbi, quoterAbi, curveAbi, feeRouterAbi } from "./abi.js";
 
 const account = privateKeyToAccount(env.keeperPk());
 const publicClient = createPublicClient({ chain: robinhoodChain, transport: http(env.rpcUrl) });
 const walletClient = createWalletClient({ account, chain: robinhoodChain, transport: http(env.rpcUrl) });
 
 const vault = env.vaultAddress();
-const quoter = env.quoterAddress();
 
 const PROBE_ETH = 1_000_000_000_000_000n; // 0.001 ETH marginal-price probe
 const MAX_CHUNKS_PER_RUN = 4;
 
 async function quoteOut(amountIn: bigint): Promise<bigint> {
+  if (env.quoteMode === "curve") {
+    // simulating the real buy from the vault (which holds the ETH) IS the quote:
+    // exact fees and near-graduation clamping included
+    const { result } = await publicClient.simulateContract({
+      address: env.curveAddress(),
+      abi: curveAbi,
+      functionName: "buy",
+      args: [amountIn, 1n, vault],
+      account: vault,
+      value: amountIn,
+    });
+    return result;
+  }
   const { result } = await publicClient.simulateContract({
-    address: quoter,
+    address: env.quoterAddress(),
     abi: quoterAbi,
     functionName: "quoteExactInputSingle",
     args: [
@@ -69,8 +81,36 @@ async function sizeChunk(budget: bigint): Promise<{ amountIn: bigint; quotedOut:
 }
 
 async function runOnce(): Promise<void> {
-  // TODO(pons): claim accrued Pons creator fees (paid in ETH by Pons V2) into the
-  // vault before buying. Wire once the fee-claim ABI is verified on mainnet.
+  // Route accrued Pons creator fees into the pot before buying: harvest() pulls
+  // from the Pons fee escrow and splits 80% vault / 20% treasury (permissionless).
+  const feeRouter = env.feeRouterAddress();
+  if (feeRouter) {
+    try {
+      const hash = await walletClient.writeContract({
+        address: feeRouter,
+        abi: feeRouterAbi,
+        functionName: "harvest",
+      });
+      await publicClient.waitForTransactionReceipt({ hash });
+      console.log(`[keeper] harvested Pons fees in tx ${hash}`);
+    } catch (err) {
+      console.error("[keeper] harvest failed (continuing to buy):", err);
+    }
+  }
+
+  if (env.quoteMode === "curve") {
+    const graduated = await publicClient.readContract({
+      address: env.curveAddress(),
+      abi: curveAbi,
+      functionName: "graduated",
+    });
+    if (graduated) {
+      console.error(
+        "[keeper] $GPU has GRADUATED off the bonding curve — rotate the vault to the v4 adapter and set QUOTE_MODE=univ3. Skipping buys.",
+      );
+      return;
+    }
+  }
 
   for (let i = 0; i < MAX_CHUNKS_PER_RUN; i++) {
     const balance = await publicClient.getBalance({ address: vault });

@@ -27,6 +27,7 @@ contract BuybackVault is ReentrancyGuard {
 
     event Funded(address indexed from, uint256 amount);
     event Bought(uint256 ethIn, uint256 gpuOut);
+    event Flushed(uint256 gpuAmount);
     event KeeperRotated(address keeper);
     event AdapterRotated(address adapter);
     event RigSet(address rig);
@@ -62,6 +63,17 @@ contract BuybackVault is ReentrancyGuard {
         gpu.approve(address(rig), out);
         rig.notifyRewardAmount(out);
         emit Bought(ethAmount, out);
+    }
+
+    /// @notice Streams any $GPU resting in the vault (Pons fee $GPU routed here, or
+    ///         donations) into the rig. Permissionless — worst case someone streams
+    ///         the pot to miners, which is its only purpose anyway.
+    function flushGpu() external nonReentrant {
+        uint256 bal = gpu.balanceOf(address(this));
+        if (bal == 0) revert ZeroAmount();
+        gpu.approve(address(rig), bal);
+        rig.notifyRewardAmount(bal);
+        emit Flushed(bal);
     }
 
     // ------------------------------------------------------------ gov surface

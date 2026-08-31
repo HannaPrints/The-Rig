@@ -77,13 +77,15 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 ## Status
 
 - [x] Protocol deep dive & economic model — [docs/DEEPDIVE.md](docs/DEEPDIVE.md)
-- [x] Core contracts + 29 passing tests
-- [x] Swap adapter (Uniswap v3 route; v4-hook adapter lands when the Pons V2 pool ABI is verified on mainnet)
-- [x] Buyback keeper with the price-impact ladder
+- [x] Core contracts + 34 passing tests
+- [x] Pons bonding-curve adapter + Uniswap v3 adapter (v4 adapter lands at graduation)
+- [x] Pons creator-fee wiring — ownerless `PonsFeeRouter`, verified against the live escrow
+- [x] Buyback keeper (curve-simulation quotes, price-impact ladder, graduation detection)
 - [x] Permit signer service
 - [x] The site
-- [ ] Pons creator-fee claim wiring
-- [ ] Robinhood Chain testnet deployment
+- [x] Mainnet launch runbook + **deterministic CA prediction** — [docs/DEPLOY.md](docs/DEPLOY.md)
+- [ ] Freeze token metadata → final CA
+- [ ] Robinhood Chain testnet dry run
 - [ ] Audit
 - [ ] Card art
 - [ ] $GPU launch on Pons

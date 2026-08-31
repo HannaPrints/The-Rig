@@ -18,6 +18,27 @@ export const vaultAbi = [
   },
 ] as const;
 
+// Pons V2 bonding curve — pre-graduation buy venue; simulating buy() IS the quote
+export const curveAbi = [
+  {
+    type: "function",
+    name: "buy",
+    stateMutability: "payable",
+    inputs: [
+      { name: "quoteIn", type: "uint256" },
+      { name: "minTokensOut", type: "uint256" },
+      { name: "recipient", type: "address" },
+    ],
+    outputs: [{ name: "tokensOut", type: "uint256" }],
+  },
+  { type: "function", name: "graduated", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+] as const;
+
+// Pons V2 fee router (ours)
+export const feeRouterAbi = [
+  { type: "function", name: "harvest", stateMutability: "nonpayable", inputs: [], outputs: [] },
+] as const;
+
 // Uniswap QuoterV2
 export const quoterAbi = [
   {

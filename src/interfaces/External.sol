@@ -26,3 +26,22 @@ interface IRewardSink {
 interface ISlotProvider {
     function slotsOf(address user) external view returns (uint256);
 }
+
+/// @dev Pons V2 fee escrow: creator fees accrue here per recipient and must be
+///      pulled by the recipient (msg.sender-gated). Verified against the live
+///      factory's feeEscrow on Robinhood Chain.
+interface IPonsFeeEscrow {
+    function claim() external returns (uint256 amount);
+    function claimToken(address token) external returns (uint256 amount);
+    function balanceOf(address recipient) external view returns (uint256);
+    function balanceOfToken(address recipient, address token) external view returns (uint256);
+}
+
+/// @dev Pons V2 bonding curve: where $GPU trades pre-graduation. Buys are
+///      ETH-in for native-quote launches; excess quote near graduation is
+///      clamp-refunded to `recipient`.
+interface IPonsBondingCurve {
+    function buy(uint256 quoteIn, uint256 minTokensOut, address recipient) external payable returns (uint256 tokensOut);
+    function graduated() external view returns (bool);
+    function quoteReserve() external view returns (uint256);
+}

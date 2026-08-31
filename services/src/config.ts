@@ -31,6 +31,10 @@ export const env = {
   // keeper service
   keeperPk: () => required("KEEPER_PK") as `0x${string}`,
   vaultAddress: () => required("VAULT_ADDRESS") as `0x${string}`,
+  // "curve" until $GPU graduates off the Pons bonding curve, then "univ3"/v4
+  quoteMode: (process.env.QUOTE_MODE ?? "curve") as "curve" | "univ3",
+  curveAddress: () => required("CURVE_ADDRESS") as `0x${string}`,
+  feeRouterAddress: () => (process.env.FEE_ROUTER_ADDRESS ?? "") as `0x${string}` | "",
   quoterAddress: () => required("QUOTER_ADDRESS") as `0x${string}`,
   gpuAddress: () => required("GPU_TOKEN") as `0x${string}`,
   wethAddress: () => required("WETH_ADDRESS") as `0x${string}`,

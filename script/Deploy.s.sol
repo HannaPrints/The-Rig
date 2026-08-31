@@ -9,47 +9,71 @@ import {Rig} from "../src/Rig.sol";
 import {BuybackVault} from "../src/BuybackVault.sol";
 import {RoyaltyRouter} from "../src/RoyaltyRouter.sol";
 import {Workshop} from "../src/Workshop.sol";
-import {IAggregatorV3, ISwapAdapter, ISlotProvider} from "../src/interfaces/External.sol";
+import {PonsFeeRouter} from "../src/PonsFeeRouter.sol";
+import {PonsCurveAdapter} from "../src/adapters/PonsCurveAdapter.sol";
+import {
+    IAggregatorV3,
+    ISwapAdapter,
+    ISlotProvider,
+    IPonsFeeEscrow,
+    IPonsBondingCurve
+} from "../src/interfaces/External.sol";
 
-/// Deploy order matters because of the Rig <-> Vault wiring:
-/// vault first, rig with vault as distributor, then vault.setRig (one-time).
+/// NONCE ORDER IS LOAD-BEARING. The $GPU launch on Pons names the PonsFeeRouter
+/// (this wallet's CREATE at nonce 3) as creatorFeeRecipient BEFORE it exists, so
+/// this script must run as the deployer wallet's nonces 1..11 exactly:
 ///
-/// Env:
-///   GPU_TOKEN     — the $GPU launched on Pons (1B fixed supply)
-///   ETH_USD_FEED  — Chainlink ETH/USD on Robinhood Chain
-///   SWAP_ADAPTER  — adapter wrapping the Pons Uniswap v4 hook pool
-///   KEEPER        — buyback bot EOA
-///   SIGNER        — mint-permit signer (behind the site's bot check)
-///   TREASURY      — project ops multisig (the 30%)
+///   0  launchToken on the Pons V2 factory        (done separately, see DEPLOY.md)
+///   1  PonsCurveAdapter                          2  BuybackVault
+///   3  PonsFeeRouter  <- pinned at launch        4  RigCard
+///   5  Shop                                      6  Rig
+///   7  vault.setRig (tx)                         8  Workshop
+///   9  card.setModules (tx)                     10  RoyaltyRouter
+///  11  card.setDefaultRoyalty (tx)
+///
+/// Set EXPECTED_FEE_ROUTER to the address pinned at launch; the script reverts
+/// rather than deploy a suite whose fees would stream to the wrong place.
+///
+/// Env: GPU_TOKEN, CURVE, FEE_ESCROW, ETH_USD_FEED, KEEPER, SIGNER, TREASURY,
+///      EXPECTED_FEE_ROUTER (optional but strongly recommended).
 contract Deploy is Script {
     function run() external {
         IERC20 gpuToken = IERC20(vm.envAddress("GPU_TOKEN"));
+        IPonsBondingCurve curve = IPonsBondingCurve(vm.envAddress("CURVE"));
+        IPonsFeeEscrow escrow = IPonsFeeEscrow(vm.envAddress("FEE_ESCROW"));
         IAggregatorV3 feed = IAggregatorV3(vm.envAddress("ETH_USD_FEED"));
-        ISwapAdapter adapter = ISwapAdapter(vm.envAddress("SWAP_ADAPTER"));
         address keeper = vm.envAddress("KEEPER");
         address signer = vm.envAddress("SIGNER");
         address payable treasury = payable(vm.envAddress("TREASURY"));
+        address expectedFeeRouter = vm.envOr("EXPECTED_FEE_ROUTER", address(0));
 
         vm.startBroadcast();
         address owner = msg.sender;
 
-        BuybackVault vault = new BuybackVault(gpuToken, keeper, adapter);
-        RigCard card = new RigCard(owner);
-        Shop shop = new Shop(card, gpuToken, feed, payable(address(vault)), treasury, signer, owner);
-        Rig rig = new Rig(gpuToken, card, ISlotProvider(address(shop)), address(vault));
-        vault.setRig(rig);
-        Workshop workshop = new Workshop(card, gpuToken, owner);
-        card.setModules(address(shop), address(workshop));
-        RoyaltyRouter royalties = new RoyaltyRouter(payable(address(vault)), treasury);
-        card.setDefaultRoyalty(address(royalties), 500); // 5%, tunable by owner
+        PonsCurveAdapter adapter = new PonsCurveAdapter(curve); // nonce 1
+        BuybackVault vault = new BuybackVault(gpuToken, keeper, ISwapAdapter(address(adapter))); // nonce 2
+        PonsFeeRouter feeRouter = new PonsFeeRouter(escrow, gpuToken, payable(address(vault)), treasury); // nonce 3
+        if (expectedFeeRouter != address(0)) {
+            require(address(feeRouter) == expectedFeeRouter, "fee router address drifted from launch pin");
+        }
+        RigCard card = new RigCard(owner); // nonce 4
+        Shop shop = new Shop(card, gpuToken, feed, payable(address(vault)), treasury, signer, owner); // nonce 5
+        Rig rig = new Rig(gpuToken, card, ISlotProvider(address(shop)), address(vault)); // nonce 6
+        vault.setRig(rig); // nonce 7
+        Workshop workshop = new Workshop(card, gpuToken, owner); // nonce 8
+        card.setModules(address(shop), address(workshop)); // nonce 9
+        RoyaltyRouter royalties = new RoyaltyRouter(payable(address(vault)), treasury); // nonce 10
+        card.setDefaultRoyalty(address(royalties), 500); // nonce 11
 
         vm.stopBroadcast();
 
-        console.log("BuybackVault:", address(vault));
-        console.log("RigCard:     ", address(card));
-        console.log("Shop:        ", address(shop));
-        console.log("Rig:         ", address(rig));
-        console.log("Workshop:    ", address(workshop));
-        console.log("RoyaltyRouter:", address(royalties));
+        console.log("PonsCurveAdapter:", address(adapter));
+        console.log("BuybackVault:    ", address(vault));
+        console.log("PonsFeeRouter:   ", address(feeRouter));
+        console.log("RigCard:         ", address(card));
+        console.log("Shop:            ", address(shop));
+        console.log("Rig:             ", address(rig));
+        console.log("Workshop:        ", address(workshop));
+        console.log("RoyaltyRouter:   ", address(royalties));
     }
 }
