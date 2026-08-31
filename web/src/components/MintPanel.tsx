@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatEther, maxUint256 } from "viem";
-import { addresses, deployed, signerUrl } from "../config";
+import { addresses, deployed, permitEndpoint } from "../config";
 import { shopAbi, erc20Abi } from "../abi";
 
 type Permit = {
@@ -60,7 +60,7 @@ export function MintPanel() {
     if (!addresses.shop || !address || price === undefined) return;
     try {
       setStatus("requesting mint permit…");
-      const res = await fetch(`${signerUrl}/permit`, {
+      const res = await fetch(permitEndpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ to: address, qty }),

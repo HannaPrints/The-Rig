@@ -1,24 +1,22 @@
-const addr = (v: string | undefined) =>
-  v && /^0x[0-9a-fA-F]{40}$/.test(v) ? (v as `0x${string}`) : undefined;
+const addr = (v: string | undefined, fallback: `0x${string}`) =>
+  v && /^0x[0-9a-fA-F]{40}$/.test(v) ? (v as `0x${string}`) : fallback;
 
-/** Contract addresses land here after the Robinhood Chain deployment. Until then the
- *  site runs in pre-launch mode: every counter reads zero, exactly like day zero. */
+/** LIVE on Robinhood Chain mainnet since 2026-08-31 — these addresses are
+ *  immutable, so they're baked in as defaults (env can still override). */
 export const addresses = {
-  shop: addr(import.meta.env.VITE_SHOP_ADDRESS),
-  rig: addr(import.meta.env.VITE_RIG_ADDRESS),
-  card: addr(import.meta.env.VITE_CARD_ADDRESS),
-  gpu: addr(import.meta.env.VITE_GPU_ADDRESS),
+  shop: addr(import.meta.env.VITE_SHOP_ADDRESS, "0x7aa6c2a24834d86E153155ac12C99FA622A41Cd6"),
+  rig: addr(import.meta.env.VITE_RIG_ADDRESS, "0x95C29bC5b83b662b335094E468911192DbBa0088"),
+  card: addr(import.meta.env.VITE_CARD_ADDRESS, "0xA35eC0E14fB2b325CcA9EB0Caf3E9CBDB1A8ACB6"),
+  gpu: addr(import.meta.env.VITE_GPU_ADDRESS, "0x3Da22F970a0a048d3830fDE22b94017B83a3802E"),
 };
 
+/** Empty = same-origin serverless function at /api/permit (ships with the site). */
 export const signerUrl: string = import.meta.env.VITE_SIGNER_URL ?? "";
+export const permitEndpoint = signerUrl ? `${signerUrl}/permit` : "/api/permit";
 
-export const deployed = Boolean(addresses.shop && addresses.rig);
+export const deployed = true;
 
-/** Deterministic deployment address for the card collection (deployer nonce 4) —
- *  OpenSea indexes Robinhood Chain natively, so this resolves once we deploy. */
-const PREDICTED_CARD = "0xA35eC0E14fB2b325CcA9EB0Caf3E9CBDB1A8ACB6";
-
-export const openSeaUrl = `https://opensea.io/assets/robinhood/${(addresses.card ?? PREDICTED_CARD).toLowerCase()}`;
+export const openSeaUrl = `https://opensea.io/assets/robinhood/${addresses.card.toLowerCase()}`;
 
 export const links = {
   openSea: openSeaUrl,

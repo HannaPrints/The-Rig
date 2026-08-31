@@ -84,8 +84,20 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 
 ## Status
 
-**🟢 $GPU IS LIVE** — launched 2026-08-31 on the exact predicted address, tx [`0x986fd73b…0641`](https://robinhoodchain.blockscout.com/tx/0x986fd73b5043c01b708b6cf7ca10cc7227bf041b9389b1c0d405cccac6560641):
-**CA `0x3Da22F970a0a048d3830fDE22b94017B83a3802E`** · curve `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` · 4% trade fee · trading open on Pons.
+**🟢 FULLY LIVE ON MAINNET** — token launched and the complete protocol deployed 2026-08-31, every contract byte-exact on its predicted address:
+
+| Contract | Address |
+|---|---|
+| **$GPU** | `0x3Da22F970a0a048d3830fDE22b94017B83a3802E` |
+| Bonding curve | `0x40D74bcb15e90Af01A54301F1F0f9D1E86F4DF8B` |
+| Shop (mint) | `0x7aa6c2a24834d86E153155ac12C99FA622A41Cd6` |
+| Rig (staking) | `0x95C29bC5b83b662b335094E468911192DbBa0088` |
+| RigCard (ERC-721) | `0xA35eC0E14fB2b325CcA9EB0Caf3E9CBDB1A8ACB6` |
+| BuybackVault | `0xcA1654Fa5815Db81674655830d4356D0A212c221` |
+| PonsFeeRouter | `0x1C92372E0f2D0eD1CF716632734f041C57f60a8F` |
+| Workshop / RoyaltyRouter / Adapter | `0x1446…67ea` / `0x23fB…77bC` / `0x9873…5CF2` |
+
+The site ships its own permit signer as a Vercel function (`web/api/permit.ts`) — deploy `web/` on Vercel with one env var (`SIGNER_PK`) and the mint is live.
 
 
 - [x] Protocol deep dive & economic model — [docs/DEEPDIVE.md](docs/DEEPDIVE.md)

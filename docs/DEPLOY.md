@@ -171,8 +171,10 @@ Two findings the dry run surfaced (both fixed):
 - ~~Chainlink ETH/USD feed~~ **FOUND & VERIFIED**: `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9`
   ("ETH / USD", 8 decimals, 24h heartbeat + deviation updates — matches the Shop's
   24h staleness window).
-- **TREASURY address (blocking the suite deploy)** — must be a team-controlled
-  multisig; it is immutable in Shop, PonsFeeRouter and RoyaltyRouter.
-- Suite deploy = the deployer wallet's next 11 transactions, exactly. Nothing else
-  from that wallet.
-- Audit. Still unaudited; the mint should not open before it.
+- ~~Suite deploy~~ **DONE 2026-08-31** — nonces 1–11 landed exactly on plan; mint
+  priced live via Chainlink (0.00202 ETH ≈ $5 at deploy time).
+- Treasury is a locally generated hot key (`TREASURY_PK` in `.env`) — the address is
+  immutable, so BACK UP `.env` and sweep the treasury to a multisig regularly.
+- Site + permit signer deploy together on Vercel: project root `web/`, env `SIGNER_PK`.
+- Keeper: run `services` keeper on a persistent host (currently on the dev box).
+- Audit. Still unaudited — shipped at the team's explicit direction. Retro-audit ASAP.
