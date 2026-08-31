@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import { formatUnits } from "viem";
 import { addresses, deployed, TIERS } from "../config";
 import { rigAbi, cardAbi, rigStakeAbi, shopRackAbi } from "../abi";
@@ -28,9 +28,9 @@ function CardChip({ card, selected, onToggle }: { card: CardInfo; selected: bool
 
 export function MyRig() {
   const { address, isConnected } = useAccount();
-  const { writeContractAsync, isPending } = useWriteContract();
-  const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
-  const { isLoading: confirming } = useWaitForTransactionReceipt({ hash: pendingHash });
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [working, setWorking] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState("");
 
@@ -60,23 +60,25 @@ export function MyRig() {
     args: [(racks ?? 0n) + 1n], query: { enabled: deployed && (racks ?? 0n) < 12n },
   });
 
-  const busy = isPending || confirming;
+  const busy = working;
   const slotsTotal = Number(slots ?? 4n);
   const slotsFree = slotsTotal - stakedCards.length;
 
-  async function run(fn: () => Promise<`0x${string}`>, msg: string) {
+  async function run(fn: () => Promise<`0x${string}`>, msg: string, doneMsg = "") {
+    if (!publicClient) return;
+    setWorking(true);
     try {
       setStatus(msg);
       const hash = await fn();
-      setPendingHash(hash);
-      setStatus(`${msg} — confirming…`);
-      await new Promise((r) => setTimeout(r, 3500));
+      setStatus(`${msg} confirming…`);
+      await publicClient.waitForTransactionReceipt({ hash });
       await Promise.all([refetchCards(), refetchEarned(), refetchApproval()]);
       setSelected(new Set());
-      setStatus("");
-      setPendingHash(undefined);
+      setStatus(doneMsg);
     } catch (e) {
       setStatus(e instanceof Error ? e.message.split("\n")[0] : "failed");
+    } finally {
+      setWorking(false);
     }
   }
 
@@ -91,21 +93,36 @@ export function MyRig() {
   const selectedStaked = stakedCards.filter((c) => selected.has(c.serial));
 
   async function stakeSelected() {
-    if (!addresses.rig) return;
-    if (!approved) {
-      await run(
-        () => writeContractAsync({ address: addresses.card!, abi: cardAbi, functionName: "setApprovalForAll", args: [addresses.rig!, true] }),
-        "approving rig…",
-      );
-      return; // approval done; user taps stake again
-    }
+    if (!addresses.rig || !addresses.card || !publicClient) return;
     const ids = selectedWallet.map((c) => BigInt(c.serial));
-    if (ids.length === 0) return;
+    if (ids.length === 0) return setStatus("select cards to plug in first");
     if (ids.length > slotsFree) return setStatus(`only ${slotsFree} slots free — buy a rack or select fewer`);
-    await run(
-      () => writeContractAsync({ address: addresses.rig!, abi: rigStakeAbi, functionName: "stake", args: [ids] }),
-      `plugging in ${ids.length} card${ids.length > 1 ? "s" : ""}…`,
-    );
+    setWorking(true);
+    try {
+      // one-time approval, waited-for, then stake — no second tap
+      if (!approved) {
+        setStatus("approving the rig (one-time)…");
+        const aHash = await writeContractAsync({
+          address: addresses.card, abi: cardAbi, functionName: "setApprovalForAll", args: [addresses.rig, true],
+        });
+        setStatus("approving the rig — confirming…");
+        await publicClient.waitForTransactionReceipt({ hash: aHash });
+        await refetchApproval();
+      }
+      setStatus(`plugging in ${ids.length} card${ids.length > 1 ? "s" : ""}…`);
+      const sHash = await writeContractAsync({
+        address: addresses.rig, abi: rigStakeAbi, functionName: "stake", args: [ids],
+      });
+      setStatus("plugging in — confirming…");
+      await publicClient.waitForTransactionReceipt({ hash: sHash });
+      await Promise.all([refetchCards(), refetchEarned()]);
+      setSelected(new Set());
+      setStatus(`plugged in ${ids.length} — now earning`);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message.split("\n")[0] : "failed");
+    } finally {
+      setWorking(false);
+    }
   }
 
   async function unstakeSelected() {
@@ -193,14 +210,12 @@ export function MyRig() {
                     <CardChip key={c.serial} card={c} selected={selected.has(c.serial)} onToggle={() => toggle(c.serial)} />
                   ))}
                 </div>
-                <button onClick={stakeSelected} disabled={busy} className="btn-primary mt-2 w-full">
+                <button onClick={stakeSelected} disabled={busy || selectedWallet.length === 0} className="btn-primary mt-2 w-full">
                   {busy
                     ? "…"
-                    : !approved
-                      ? "APPROVE RIG (one-time)"
-                      : selectedWallet.length > 0
-                        ? `PLUG IN ${selectedWallet.length}`
-                        : "SELECT CARDS TO PLUG IN"}
+                    : selectedWallet.length > 0
+                      ? `PLUG IN ${selectedWallet.length}${!approved ? " (approve + stake)" : ""}`
+                      : "SELECT CARDS TO PLUG IN"}
                 </button>
               </>
             )}

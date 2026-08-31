@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from "wagmi";
 import { formatEther, formatUnits, maxUint256 } from "viem";
 import { addresses, deployed, permitEndpoint, TIERS } from "../config";
 import { shopAbi, erc20Abi } from "../abi";
@@ -11,9 +11,10 @@ const MINT_ODDS = TIERS.slice(0, 5); // mintable tiers only
 export function MintPanel() {
   const [qty, setQty] = useState(1);
   const [status, setStatus] = useState<{ msg: string; kind: "info" | "ok" | "err" } | null>(null);
+  const [working, setWorking] = useState(false);
   const { address, isConnected } = useAccount();
-  const { writeContractAsync, data: txHash, isPending } = useWriteContract();
-  const { isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const { data: price } = useReadContract({
     address: addresses.shop, abi: shopAbi, functionName: "mintPriceWei", args: [BigInt(qty)],
@@ -39,26 +40,24 @@ export function MintPanel() {
   const burnNeeded = (burnPerMint ?? 0n) * BigInt(qty);
   const needsApproval = burnNeeded > 0n && (allowance ?? 0n) < burnNeeded;
   const shortGpu = burnNeeded > 0n && (gpuBal ?? 0n) < burnNeeded;
-  const busy = isPending || confirming;
+  const busy = working;
   const soldPct = Math.min(100, (Number(made ?? 0n) / 10_000) * 100);
 
-  async function approve() {
-    if (!addresses.gpu || !addresses.shop) return;
+  // One button, one click: approve (if needed, waiting for it to confirm) → then mint.
+  async function mintFlow() {
+    if (!addresses.shop || !addresses.gpu || !address || price === undefined || !publicClient) return;
+    setWorking(true);
     try {
-      setStatus({ msg: "approving $GPU for the burn gate…", kind: "info" });
-      await writeContractAsync({
-        address: addresses.gpu, abi: erc20Abi, functionName: "approve", args: [addresses.shop, maxUint256],
-      });
-      await refetchAllowance();
-      setStatus({ msg: "approved — you can mint now", kind: "ok" });
-    } catch (e) {
-      setStatus({ msg: e instanceof Error ? e.message.split("\n")[0] : "approval failed", kind: "err" });
-    }
-  }
+      if (needsApproval) {
+        setStatus({ msg: "approving $GPU for the burn gate…", kind: "info" });
+        const approveHash = await writeContractAsync({
+          address: addresses.gpu, abi: erc20Abi, functionName: "approve", args: [addresses.shop, maxUint256],
+        });
+        setStatus({ msg: "confirming approval…", kind: "info" });
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        await refetchAllowance();
+      }
 
-  async function mint() {
-    if (!addresses.shop || !address || price === undefined) return;
-    try {
       setStatus({ msg: "requesting mint permit…", kind: "info" });
       const res = await fetch(permitEndpoint, {
         method: "POST", headers: { "content-type": "application/json" },
@@ -66,14 +65,19 @@ export function MintPanel() {
       });
       if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? "permit refused");
       const p = (await res.json()) as Permit;
+
       setStatus({ msg: `minting ${qty} card${qty > 1 ? "s" : ""}…`, kind: "info" });
-      await writeContractAsync({
+      const mintHash = await writeContractAsync({
         address: addresses.shop, abi: shopAbi, functionName: "mint",
         args: [BigInt(qty), p.seed, BigInt(p.nonce), BigInt(p.deadline), p.signature], value: price,
       });
+      setStatus({ msg: "confirming mint…", kind: "info" });
+      await publicClient.waitForTransactionReceipt({ hash: mintHash });
       setStatus({ msg: `minted ${qty} card${qty > 1 ? "s" : ""} — plug them in below ↓`, kind: "ok" });
     } catch (e) {
-      setStatus({ msg: e instanceof Error ? e.message.split("\n")[0] : "mint failed", kind: "err" });
+      setStatus({ msg: e instanceof Error ? e.message.split("\n")[0] : "transaction failed", kind: "err" });
+    } finally {
+      setWorking(false);
     }
   }
 
@@ -171,7 +175,7 @@ export function MintPanel() {
             )}
           </div>
 
-          {/* CTA */}
+          {/* CTA — one click handles approve (if needed) then mint */}
           {!isConnected ? (
             <p className="label text-center">connect a wallet to mint</p>
           ) : shortGpu ? (
@@ -188,13 +192,13 @@ export function MintPanel() {
                 need {(+formatUnits(burnNeeded - (gpuBal ?? 0n), 18)).toLocaleString()} more $GPU to mint {qty}
               </p>
             </div>
-          ) : needsApproval ? (
-            <button onClick={approve} disabled={busy} className="btn-ghost w-full text-amber">
-              {busy ? "…" : "APPROVE $GPU BURN (one-time)"}
-            </button>
           ) : (
-            <button onClick={mint} disabled={busy} className="btn-primary w-full">
-              {busy ? "MINTING…" : `MINT ${qty} — ${price !== undefined ? (+formatEther(price)).toFixed(4) : "…"} ETH`}
+            <button onClick={mintFlow} disabled={busy} className="btn-primary w-full">
+              {busy
+                ? (status?.msg.toUpperCase() ?? "WORKING…")
+                : needsApproval
+                  ? `APPROVE & MINT ${qty} — ${price !== undefined ? (+formatEther(price)).toFixed(4) : "…"} ETH`
+                  : `MINT ${qty} — ${price !== undefined ? (+formatEther(price)).toFixed(4) : "…"} ETH`}
             </button>
           )}
 
