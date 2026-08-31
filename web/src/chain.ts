@@ -5,9 +5,15 @@ export const robinhoodChain = defineChain({
   name: "Robinhood Chain",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    // Set VITE_RPC_URL to a dedicated endpoint (Alchemy/dRPC/QuickNode) for
-    // production — the public RPC is rate-limited and not meant for app traffic.
-    default: { http: [import.meta.env.VITE_RPC_URL || "https://rpc.mainnet.chain.robinhood.com"] },
+    // The public RPC sends a broken CORS header, so browser reads go through our
+    // same-origin /api/rpc proxy by default. Override with VITE_RPC_URL only if
+    // you have a provider (Alchemy/dRPC) that serves correct CORS directly.
+    default: {
+      http: [
+        import.meta.env.VITE_RPC_URL ||
+          (typeof window !== "undefined" ? `${window.location.origin}/api/rpc` : "https://rpc.mainnet.chain.robinhood.com"),
+      ],
+    },
   },
   blockExplorers: {
     default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" },
