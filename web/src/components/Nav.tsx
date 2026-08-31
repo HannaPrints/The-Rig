@@ -26,6 +26,9 @@ export function Nav() {
           <a href="#mint" className="label hidden transition-colors hover:text-accent md:block">
             shop
           </a>
+          <a href="#/docs" className="label hidden transition-colors hover:text-accent md:block">
+            docs
+          </a>
           <a href="#faq" className="label hidden transition-colors hover:text-accent md:block">
             faq
           </a>
