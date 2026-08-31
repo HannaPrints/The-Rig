@@ -11,8 +11,10 @@ import { randomBytes } from "node:crypto";
 import { isAddress, bytesToHex, bytesToBigInt } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-const SHOP = (process.env.SHOP_ADDRESS ?? "0x7aa6c2a24834d86E153155ac12C99FA622A41Cd6") as `0x${string}`;
-const CHAIN_ID = Number(process.env.CHAIN_ID ?? 4663);
+// Immutable mainnet values — `||` (not `??`) so an empty-string env var on Vercel
+// still falls back to the correct default instead of breaking the EIP-712 domain.
+const SHOP = (process.env.SHOP_ADDRESS || "0x7aa6c2a24834d86E153155ac12C99FA622A41Cd6") as `0x${string}`;
+const CHAIN_ID = Number(process.env.CHAIN_ID) || 4663;
 const MAX_PER_TX = 50; // the Shop's gas bound — not a rate limit
 const PERMIT_TTL_SECONDS = 300;
 
