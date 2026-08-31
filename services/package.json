@@ -1,0 +1,23 @@
+{
+  "name": "@therig/services",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Off-chain services for The Rig: mint-permit signer and buyback keeper",
+  "scripts": {
+    "signer": "tsx src/signer.ts",
+    "keeper": "tsx src/keeper.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.14",
+    "viem": "^2.21.54"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
