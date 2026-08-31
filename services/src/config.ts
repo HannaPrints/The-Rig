@@ -37,6 +37,10 @@ export const env = {
   // set to enable auto-harvest of Pons creator fees each keeper window
   feeRouterAddress: () => (process.env.FEE_ROUTER_ADDRESS ?? "") as `0x${string}` | "",
   feeEscrowAddress: () => (process.env.FEE_ESCROW ?? "") as `0x${string}` | "",
+  // auto-forward harvested treasury fees: needs TREASURY_PK + SWEEP_TO
+  treasuryPk: () => (process.env.TREASURY_PK ?? "") as `0x${string}` | "",
+  sweepTo: () => (process.env.SWEEP_TO ?? "") as `0x${string}` | "",
+  sweepMinWei: BigInt(process.env.SWEEP_MIN_WEI ?? 2_000_000_000_000_000n), // 0.002 ETH
   quoterAddress: () => required("QUOTER_ADDRESS") as `0x${string}`,
   gpuAddress: () => required("GPU_TOKEN") as `0x${string}`,
   wethAddress: () => required("WETH_ADDRESS") as `0x${string}`,

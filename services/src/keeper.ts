@@ -115,7 +115,27 @@ async function runOnce(): Promise<void> {
     }
   }
 
+  await sweepTreasury();
   await buyLoop();
+}
+
+/** Forward harvested treasury fees to the team wallet so they're visible where
+ *  the team actually looks. The treasury address is immutable in the protocol;
+ *  this hop is pure ops. */
+async function sweepTreasury(): Promise<void> {
+  const pk = env.treasuryPk();
+  const to = env.sweepTo();
+  if (!pk || !to) return;
+  const treasury = privateKeyToAccount(pk);
+  const balance = await publicClient.getBalance({ address: treasury.address });
+  if (balance < env.sweepMinWei) return;
+  const gasBuffer = 300_000_000_000_000n; // keep dust for the transfer's own gas
+  const value = balance - gasBuffer;
+  if (value <= 0n) return;
+  const tw = createWalletClient({ account: treasury, chain: robinhoodChain, transport: http(env.rpcUrl) });
+  const hash = await tw.sendTransaction({ to, value });
+  await publicClient.waitForTransactionReceipt({ hash });
+  console.log(`[keeper] swept ${formatEther(value)} ETH treasury -> ${to} in ${hash}`);
 }
 
 async function buyLoop(): Promise<void> {
