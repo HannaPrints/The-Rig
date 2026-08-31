@@ -37,6 +37,10 @@ import {
 /// Env: GPU_TOKEN, CURVE, FEE_ESCROW, ETH_USD_FEED, KEEPER, SIGNER, TREASURY,
 ///      EXPECTED_FEE_ROUTER (optional but strongly recommended).
 contract Deploy is Script {
+    /// 5% secondary-market fee on OpenSea and every ERC-2981-honoring marketplace,
+    /// paid to the ownerless RoyaltyRouter (70% miners' pot / 30% treasury).
+    uint96 internal constant SECONDARY_ROYALTY_BPS = 500;
+
     struct Cfg {
         IERC20 gpu;
         IPonsBondingCurve curve;
@@ -76,7 +80,7 @@ contract Deploy is Script {
         Workshop workshop = new Workshop(card, c.gpu, msg.sender); // nonce 8
         card.setModules(address(shop), address(workshop)); // nonce 9
         RoyaltyRouter royalties = new RoyaltyRouter(payable(address(vault)), c.treasury); // nonce 10
-        card.setDefaultRoyalty(address(royalties), 500); // nonce 11
+        card.setDefaultRoyalty(address(royalties), SECONDARY_ROYALTY_BPS); // nonce 11
 
         vm.stopBroadcast();
 

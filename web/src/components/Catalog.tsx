@@ -26,7 +26,9 @@ export function Catalog() {
       </div>
       <p className="mb-8 max-w-lg text-[13px] leading-6 text-muted">
         Every mint rolls a tier from randomness committed before your transaction. Fuse two identical
-        cards into the next tier — two retire, one is forged, forever.
+        cards into the next tier — two retire, one is forged, forever. Secondary sales carry a{" "}
+        <span className="text-ink">5% royalty</span>, and 70% of it flows straight back into the
+        miners' pot.
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {TIERS.map((t) => (

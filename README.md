@@ -39,6 +39,7 @@ burn $GPU → mint → slot in → mine $GPU → claim → spend into upgrades �
 - **The money loop:** 70% of every mint, overclock, fusion, rack, and royalty buys $GPU on the open market and streams it straight to miners — plus 30% of the creator share of $GPU's own trading fees on [Pons](https://pons.fun) (the other 70% funds the project treasury).
 - **The burn:** every mint torches 12,500 $GPU from your wallet. Full mint = 125,000,000 burned — 12.5% of everything that will ever exist.
 - **Climb:** overclock (+20%/level, max +100%), fuse two identical cards into the next tier (supply only shrinks), expand your room from 4 to 52 slots.
+- **Secondary sales:** 5% royalty (ERC-2981) on OpenSea and every honoring marketplace, paid to the ownerless RoyaltyRouter — 70% of it streams back to the miners' pot.
 
 ## The trust model
 
@@ -56,7 +57,7 @@ Anti-bot by construction: contracts can't mint and permits expire in 5 minutes. 
 
 ```
 src/        Solidity — RigCard · Shop · Rig · BuybackVault · RoyaltyRouter · Workshop · adapters
-test/       34 Foundry tests
+test/       39 Foundry tests
 script/     deployment
 services/   permit signer (the bot gate + committed randomness) · buyback keeper
 web/        the site — Vite + React + wagmi
@@ -79,7 +80,7 @@ Deploy: `forge script script/Deploy.s.sol --rpc-url https://rpc.mainnet.chain.ro
 ## Status
 
 - [x] Protocol deep dive & economic model — [docs/DEEPDIVE.md](docs/DEEPDIVE.md)
-- [x] Core contracts + 34 passing tests
+- [x] Core contracts + 39 passing tests
 - [x] Pons bonding-curve adapter + Uniswap v3 adapter (v4 adapter lands at graduation)
 - [x] Pons creator-fee wiring — ownerless `PonsFeeRouter`, verified against the live escrow
 - [x] Buyback keeper (curve-simulation quotes, price-impact ladder, graduation detection)

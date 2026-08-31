@@ -33,10 +33,14 @@ contract RigCard is ERC721, ERC2981, Ownable {
     uint256 public nextSerial = 1;
     uint256 public livingCount; // shrinks with every fusion, never grows past mints
     string public baseURI;
+    /// @notice ERC-7572 collection-level metadata (name, image, description) —
+    ///         OpenSea reads this for the collection page and fee display.
+    string public contractURI;
 
     mapping(uint256 => Card) public cards;
 
     event ModulesSet(address shop, address workshop);
+    event ContractURIUpdated(); // ERC-7572: signals marketplaces to refresh
     event CardMinted(uint256 indexed serial, address indexed to, uint8 tier);
     event CardBurned(uint256 indexed serial);
     event Overclocked(uint256 indexed serial, uint8 newLevel);
@@ -132,6 +136,13 @@ contract RigCard is ERC721, ERC2981, Ownable {
         baseURI = uri;
     }
 
+    function setContractURI(string calldata uri) external onlyOwner {
+        contractURI = uri;
+        emit ContractURIUpdated();
+    }
+
+    /// @notice Secondary-market fee (ERC-2981) — OpenSea and every honoring
+    ///         marketplace reads this. Set to 5% → RoyaltyRouter at deploy.
     function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyOwner {
         _setDefaultRoyalty(receiver, feeNumerator);
     }

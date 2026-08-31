@@ -96,9 +96,10 @@ card → shop → rig → wiring → workshop → royalties) and reverts if the 
 misses its pinned address.
 
 **3. Post-deploy:** verify all contracts on Blockscout; transfer ownables to the
-multisig; fill service envs (`SHOP_ADDRESS`, `VAULT_ADDRESS`, `FEE_ROUTER_ADDRESS`);
-start `npm run signer` and `npm run keeper`; set the site's `VITE_*` addresses and
-redeploy it.
+multisig; set `card.setContractURI(...)` (collection metadata OpenSea reads — the 5%
+ERC-2981 royalty itself is set by the deploy script); fill service envs
+(`SHOP_ADDRESS`, `VAULT_ADDRESS`); start `npm run signer` and `npm run keeper`; set
+the site's `VITE_*` addresses and redeploy it.
 
 ## How the money flows after launch
 
@@ -107,7 +108,8 @@ $GPU trades on the curve (1% fee) ──► creator share accrues in the Pons es
         ops manually calls feeRouter.sweepAndHarvest()   (never automated;
         ├── ETH:     30% → BuybackVault, 70% → treasury   fees sit safely in
         └── fee-$GPU: 30% → BuybackVault, 70% → treasury  escrow until then)
-in-game spend (mints/overclocks/fusions/racks/royalties): 70% → vault, 30% → treasury
+in-game spend (mints/overclocks/fusions/racks): 70% → vault, 30% → treasury
+secondary sales (OpenSea etc): 5% ERC-2981 royalty → RoyaltyRouter → 70/30 same way
 BuybackVault.buy() ──► PonsCurveAdapter ──► curve ──► $GPU ──► Rig 12h stream
 ```
 
