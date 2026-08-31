@@ -8,6 +8,7 @@ import { Catalog } from "./components/Catalog";
 import { TrustStrip } from "./components/TrustStrip";
 import { MintPanel } from "./components/MintPanel";
 import { MyRig } from "./components/MyRig";
+import { Fusion } from "./components/Fusion";
 import { FAQ } from "./components/FAQ";
 import { Footer } from "./components/Footer";
 
@@ -23,10 +24,16 @@ export default function App() {
         <Explainer />
         <TrustStrip />
         <Catalog />
-        <div className="mx-auto grid max-w-6xl gap-4 px-5 py-16 md:grid-cols-2" id="mint">
-          <MintPanel />
-          <MyRig />
-        </div>
+        <section className="mx-auto max-w-6xl px-5 py-16" id="mint">
+          <h2 className="mb-6 text-xl font-bold tracking-tight">Shop</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <MintPanel />
+            <MyRig />
+          </div>
+          <div className="mt-4">
+            <Fusion />
+          </div>
+        </section>
         <FAQ />
       </main>
       <Footer />

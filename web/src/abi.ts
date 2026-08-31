@@ -33,6 +33,7 @@ export const rigAbi = [
   },
   { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [], outputs: [] },
   { type: "function", name: "rewardRate", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "periodFinish", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalPaidOut", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalStreamed", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
@@ -43,6 +44,15 @@ export const rigAbi = [
     inputs: [{ name: "", type: "address" }],
     outputs: [{ type: "uint256" }],
   },
+] as const;
+
+export const vaultAbi = [
+  { type: "function", name: "totalBoughtBack", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+] as const;
+
+export const feeRouterAbi = [
+  { type: "function", name: "totalEthRouted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalGpuRouted", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 export const cardAbi = [
@@ -149,6 +159,26 @@ export const shopRackAbi = [
     outputs: [{ type: "uint256" }],
   },
   { type: "function", name: "buyRack", stateMutability: "payable", inputs: [], outputs: [] },
+] as const;
+
+export const shopFuseAbi = [
+  {
+    type: "function",
+    name: "fusionPriceWei",
+    stateMutability: "view",
+    inputs: [{ name: "tier", type: "uint8" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "fuse",
+    stateMutability: "payable",
+    inputs: [
+      { name: "serialA", type: "uint256" },
+      { name: "serialB", type: "uint256" },
+    ],
+    outputs: [],
+  },
 ] as const;
 
 export const erc20Abi = [

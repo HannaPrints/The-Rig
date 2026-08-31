@@ -8,6 +8,8 @@ export const addresses = {
   rig: addr(import.meta.env.VITE_RIG_ADDRESS, "0x95C29bC5b83b662b335094E468911192DbBa0088"),
   card: addr(import.meta.env.VITE_CARD_ADDRESS, "0xA35eC0E14fB2b325CcA9EB0Caf3E9CBDB1A8ACB6"),
   gpu: addr(import.meta.env.VITE_GPU_ADDRESS, "0x3Da22F970a0a048d3830fDE22b94017B83a3802E"),
+  vault: addr(import.meta.env.VITE_VAULT_ADDRESS, "0xcA1654Fa5815Db81674655830d4356D0A212c221"),
+  feeRouter: addr(import.meta.env.VITE_FEEROUTER_ADDRESS, "0x1C92372E0f2D0eD1CF716632734f041C57f60a8F"),
 };
 
 /** Empty = same-origin serverless function at /api/permit (ships with the site). */
