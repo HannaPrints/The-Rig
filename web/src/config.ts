@@ -20,13 +20,22 @@ export const deployed = true;
 
 export const openSeaUrl = `https://opensea.io/assets/robinhood/${addresses.card.toLowerCase()}`;
 
+/** The EOA that executes buybacks — its transaction history IS the proof. */
+export const KEEPER_ADDRESS = "0x16CFB325A74A0b52B7fCb2EcC5347abC3053bF9B";
+
+const explorer = "https://robinhoodchain.blockscout.com";
+
 export const links = {
   openSea: openSeaUrl,
   github: "https://github.com/HannaPrints/The-Rig",
   docs: "https://github.com/HannaPrints/The-Rig/blob/main/docs/DEEPDIVE.md",
-  explorer: "https://robinhoodchain.blockscout.com",
+  explorer,
   x: "https://x.com/TheRigRH",
   site: "https://www.therig.sh",
+  // buyback proof: the keeper's tx list + the vault that holds the pot
+  keeper: `${explorer}/address/${KEEPER_ADDRESS}`,
+  vault: `${explorer}/address/${addresses.vault}`,
+  gpuToken: `${explorer}/token/${addresses.gpu}`,
 };
 
 export const TIERS = [

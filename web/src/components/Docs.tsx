@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { addresses, links, TIERS } from "../config";
+import { addresses, links, TIERS, KEEPER_ADDRESS } from "../config";
 
 const SECTIONS = [
   ["overview", "Overview"],
@@ -257,7 +257,8 @@ export function Docs() {
                 ["Card collection", addresses.card],
                 ["Shop (mint)", addresses.shop],
                 ["Rig (staking)", addresses.rig],
-                ["Buyback vault", addresses.vault],
+                ["Buyback vault (holds the pot)", addresses.vault],
+                ["Buyback wallet (executes every buy)", KEEPER_ADDRESS],
                 ["Fee router", addresses.feeRouter],
               ].map(([label, a]) => (
                 <div key={label as string}>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useReadContract } from "wagmi";
 import { formatUnits } from "viem";
-import { addresses, deployed } from "../config";
+import { addresses, deployed, links } from "../config";
 import { shopAbi, rigAbi, cardAbi, vaultAbi, feeRouterAbi } from "../abi";
 
 function useNum(v: bigint | undefined, decimals = 0): number {
@@ -39,10 +39,29 @@ function fmt(n: number, max = 0): string {
   return n.toLocaleString("en-US", { maximumFractionDigits: max });
 }
 
-function BigStat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+function BigStat({
+  label,
+  value,
+  sub,
+  accent,
+  verifyHref,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  accent?: boolean;
+  verifyHref?: string;
+}) {
   return (
     <div className="panel p-6">
-      <div className="label">{label}</div>
+      <div className="flex items-baseline justify-between">
+        <div className="label">{label}</div>
+        {verifyHref && (
+          <a href={verifyHref} target="_blank" rel="noreferrer" className="label text-accent hover:underline">
+            verify ↗
+          </a>
+        )}
+      </div>
       <div className={`num mt-3 text-[32px] leading-none ${accent ? "text-accent" : "text-ink"}`}>{value}</div>
       {sub && <div className="num mt-2 text-[11px] text-muted">{sub}</div>}
     </div>
@@ -106,6 +125,7 @@ export function Network() {
           value={fmt(buybacks)}
           sub={`${(useNum(ethRouted, 18)).toFixed(3)} ETH of fees routed in`}
           accent
+          verifyHref={links.keeper}
         />
         <BigStat
           label="streaming right now"
@@ -132,6 +152,32 @@ export function Network() {
         <div className="px-6 py-6">
           <div className="num text-[22px] text-ink">{(useNum(ethRouted, 18)).toFixed(3)}</div>
           <div className="label mt-2">ETH fees → protocol</div>
+        </div>
+      </div>
+
+      {/* proof — the actual wallets, so nobody has to take the number on faith */}
+      <div className="panel mt-4 p-5">
+        <div className="label mb-2 text-ink">don't trust us — verify</div>
+        <p className="mb-4 text-[13px] leading-6 text-muted">
+          Every buyback is an on-chain transaction from the keeper wallet, and the $GPU it buys lands
+          in the vault. Both are public — check the numbers above against the chain yourself.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <a href={links.keeper} target="_blank" rel="noreferrer" className="border border-line p-3 transition-colors hover:border-accent-dim">
+            <div className="label mb-1 text-accent">buyback wallet ↗</div>
+            <div className="num break-all text-[11px] text-muted">0x16CFB3…53bF9B</div>
+            <div className="label mt-1 normal-case tracking-normal">every buy tx, timestamped</div>
+          </a>
+          <a href={links.vault} target="_blank" rel="noreferrer" className="border border-line p-3 transition-colors hover:border-accent-dim">
+            <div className="label mb-1 text-accent">vault ↗</div>
+            <div className="num break-all text-[11px] text-muted">0xcA1654…12c221</div>
+            <div className="label mt-1 normal-case tracking-normal">holds the miners' pot</div>
+          </a>
+          <a href={links.gpuToken} target="_blank" rel="noreferrer" className="border border-line p-3 transition-colors hover:border-accent-dim">
+            <div className="label mb-1 text-accent">$GPU token ↗</div>
+            <div className="num break-all text-[11px] text-muted">0x3Da22F…3802E</div>
+            <div className="label mt-1 normal-case tracking-normal">supply, holders, transfers</div>
+          </a>
         </div>
       </div>
 
